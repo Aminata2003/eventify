@@ -11,6 +11,7 @@ import CreateEvent from "./pages/CreateEvent";
 import Dashboard from "./pages/Dashboard";
 import ParticipantsList from "./pages/ParticipantsList";
 import { AuthProvider } from "./context/AuthContext";
+import Updates from "./pages/Updates";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/suivi-events/:eventId" element={<ParticipantsList />} />
+          <Route path="/updates" element={<Updates />} />
         </Routes>
       </Router>
     </AuthProvider>

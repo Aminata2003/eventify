@@ -9,16 +9,53 @@ import heroImg from "../assets/image.png";
 
 const PAGE_SIZE = 6;
 
+function isWeekend(date) {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+function filterEvents(events, activeCategory, filters) {
+  const today = new Date();
+
+  return events.filter((event) => {
+    if (activeCategory !== "Tous les événements" && event.category !== activeCategory) {
+      return false;
+    }
+
+    if (filters.location && event.location !== filters.location) {
+      return false;
+    }
+
+    if (filters.date) {
+      const eventDate = new Date(`${event.date}T00:00:00`);
+      if (filters.date === "today") {
+        if (
+          eventDate.getFullYear() !== today.getFullYear() ||
+          eventDate.getMonth() !== today.getMonth() ||
+          eventDate.getDate() !== today.getDate()
+        ) {
+          return false;
+        }
+      }
+
+      if (filters.date === "weekend" && !isWeekend(eventDate)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
+
 function Home() {
   const [activeCategory, setActiveCategory] = useState("Tous les événements");
   const [filters, setFilters] = useState({ date: "", location: "" });
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const filteredEvents = useMemo(() => {
-    return mockEvents.filter((e) =>
-      activeCategory === "Tous les événements" ? true : e.category === activeCategory
-    );
-  }, [activeCategory]);
+  const filteredEvents = useMemo(
+    () => filterEvents(mockEvents, activeCategory, filters),
+    [activeCategory, filters]
+  );
 
   const visibleEvents = filteredEvents.slice(0, visibleCount);
   const hasMore = visibleCount < filteredEvents.length;

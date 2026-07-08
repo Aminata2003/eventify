@@ -13,6 +13,8 @@ export const mockEvents = [
     description: "Une nuit de percussions traditionnelles et de sonorités modernes avec les meilleurs artistes sénégalais.",
     price: "10 000 FCFA",
     cta: "Réserver",
+    updatedAt: "2026-07-05T14:30:00",
+    updateNote: "Lieu changé : nouvelle scène sur la Corniche.",
   },
   {
     id: 2,
@@ -28,6 +30,8 @@ export const mockEvents = [
     description: "Une immersion pratique dans l'IA générative et les frameworks web modernes.",
     price: "Gratuit",
     cta: "S'inscrire",
+    updatedAt: "2026-07-01T09:00:00",
+    updateNote: "Horaire avancé de 14h00 à 10h00.",
   },
   {
     id: 3,
@@ -43,6 +47,8 @@ export const mockEvents = [
     description: "Un menu dégustation revisitant les classiques de la cuisine sénégalaise.",
     price: "25 000 FCFA",
     cta: "Réserver",
+    updatedAt: "2026-06-28T18:00:00",
+    updateNote: "Prix ajusté de 20 000 à 25 000 FCFA.",
   },
   {
     id: 4,
@@ -58,11 +64,14 @@ export const mockEvents = [
     description: "Une collection d'œuvres d'artistes sénégalais émergents explorant l'identité et la modernité.",
     price: "Don",
     cta: "Billets",
+    updatedAt: "2026-06-20T11:00:00",
+    updateNote: "Description enrichie avec la liste des artistes exposés.",
   },
   {
     id: 5,
     category: "Affaires",
     visibility: "private",
+    invitedEmails: ["aminata@exemple.com", "moussa@exemple.com"],
     image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600",
     date: "2026-10-15",
     dateLabel: "15 oct.",
@@ -73,6 +82,8 @@ export const mockEvents = [
     description: "Réseautez avec des investisseurs, porteurs de projets et leaders économiques. Événement sur invitation.",
     price: "50 000 FCFA",
     cta: "Postuler",
+    updatedAt: "2026-06-15T08:00:00",
+    updateNote: "Liste des invités mise à jour.",
   },
   {
     id: 6,
@@ -88,6 +99,8 @@ export const mockEvents = [
     description: "Reconnectez-vous avec votre paix intérieure lors d'une séance guidée face à l'océan.",
     price: "5 000 FCFA",
     cta: "Nous rejoindre",
+    updatedAt: "2026-06-10T07:00:00",
+    updateNote: "Ajout d'une session bonus de méditation.",
   },
 ];
 
@@ -100,8 +113,24 @@ export const categories = [
   "Affaires",
   "Bien-être",
   "Sports",
-  "religion",
-
+  "Religion",
 ];
 
-export const locations = ["Sénégal (Tous)", "Dakar", "Saint-Louis", "Thiès", "Mbour", "Ziguinchor", "Kaolack", "Tambacounda", "Kédougou", "Fatick", "Louga", "Matam", "Kolda", "Diourbel", "Sédhiou", "Kaffrine"];
+export const locations = [
+  "Sénégal (Tous)",
+  "Dakar",
+  "Saint-Louis",
+  "Thiès",
+  "Mbour",
+  "Ziguinchor",
+  "Kaolack",
+  "Tambacounda",
+  "Kédougou",
+  "Fatick",
+  "Louga",
+  "Matam",
+  "Kolda",
+  "Diourbel",
+  "Sédhiou",
+  "Kaffrine",
+];
