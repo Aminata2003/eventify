@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function NavbarPublic() {
@@ -14,21 +14,43 @@ function NavbarPublic() {
             Eventify
           </Link>
           <div className="hidden gap-6 text-sm font-medium text-gray-700 md:flex">
-            <Link to="/" className="border-b-2 border-primary pb-1 text-primary">
+            <NavLink
+              to="/events"
+              className={({ isActive }) =>
+                isActive
+                  ? "border-b-2 border-primary pb-1 text-primary"
+                  : "hover:text-primary"
+              }
+            >
               Trouver des événements
-            </Link>
-            <Link to="/my-events" className="hover:text-primary">
+            </NavLink>
+            <NavLink
+              to="/my-events"
+              className={({ isActive }) =>
+                isActive ? "border-b-2 border-primary pb-1 text-primary" : "hover:text-primary"
+              }
+            >
               Mes événements
-            </Link>
+            </NavLink>
             {user?.role === "organizer" && (
-              <Link to="/dashboard" className="hover:text-primary">
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  isActive ? "border-b-2 border-primary pb-1 text-primary" : "hover:text-primary"
+                }
+              >
                 Dashboard
-              </Link>
+              </NavLink>
             )}
             {!user && (
-              <Link to="/register-organisateur" className="hover:text-primary">
+              <NavLink
+                to="/register-organisateur"
+                className={({ isActive }) =>
+                  isActive ? "border-b-2 border-primary pb-1 text-primary" : "hover:text-primary"
+                }
+              >
                 Devenir organisateur
-              </Link>
+              </NavLink>
             )}
           </div>
         </div>

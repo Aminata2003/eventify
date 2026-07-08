@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import RegisterParticipant from "./pages/RegisterParticipant";
+import Events from "./pages/Events";
 import RegisterOrganisateur from "./pages/RegisterOrganisateur";
 import Login from "./pages/Login";
 import MyEvents from "./pages/MyEvents";
@@ -17,6 +18,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/register" element={<RegisterParticipant />} />
           <Route path="/register-participant" element={<RegisterParticipant />} />
           <Route path="/register-organisateur" element={<RegisterOrganisateur />} />
