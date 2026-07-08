@@ -54,13 +54,12 @@ export default function RegisterOrganisateur() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-stone-50 px-4 py-10">
-      <Link to="/" className="flex items-center gap-2 text-red-600">
-        <Calendar size={22} strokeWidth={2.4} />
+      <Link to="/" className="flex items-center gap-2 text-[#f6682f]">
         <span className="text-lg font-bold">Eventify</span>
       </Link>
 
       <div className="mt-6 w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-        <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">
+        <span className="inline-block rounded-full bg-[#f6682f]/10 px-3 py-1 text-xs font-medium text-[#f6682f]">
           Compte Organisateur
         </span>
         <h1 className="mt-3 text-xl font-bold text-stone-900">
@@ -129,7 +128,7 @@ export default function RegisterOrganisateur() {
             </div>
             <div>
               <label className="block text-sm font-medium text-stone-800">
-                Confirmer le mot de passe
+                Confirmer mot de passe
               </label>
               <div className="relative mt-1.5">
                 <Lock
@@ -157,11 +156,11 @@ export default function RegisterOrganisateur() {
             />
             <span>
               J'accepte les{" "}
-              <span className="font-medium text-red-600">
+              <span className="font-medium text-[#f6682f]">
                 Conditions Générales
               </span>{" "}
               et la{" "}
-              <span className="font-medium text-red-600">
+              <span className="font-medium text-[#f6682f]">
                 Politique de Confidentialité
               </span>
               .
@@ -169,7 +168,7 @@ export default function RegisterOrganisateur() {
           </label>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[#f6682f]">
               {error}
             </p>
           )}
@@ -177,7 +176,7 @@ export default function RegisterOrganisateur() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+            className="w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
           >
             {submitting ? "Création..." : "Créer mon compte organisateur →"}
           </button>
@@ -185,7 +184,7 @@ export default function RegisterOrganisateur() {
 
         <p className="mt-4 text-center text-sm text-stone-500">
           Vous êtes déjà inscrit ?{" "}
-          <Link to="/login" className="font-medium text-red-600">
+          <Link to="/login" className="font-medium text-[#f6682f]">
             Se connecter
           </Link>
         </p>

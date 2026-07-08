@@ -147,7 +147,7 @@ export default function EventDetails() {
           <div className="rounded-xl border border-stone-200 bg-white p-5">
             <p className="text-xs text-stone-400">Billets à partir de</p>
             <p className="text-2xl font-bold text-stone-900">
-              {event.price > 0 ? `${event.price.toFixed(2)} $` : "Gratuit"}
+              {event.price > 0 ? `${event.price.toLocaleString("fr-FR")} FCFA` : "Gratuit"}
             </p>
             <p className="mt-1 flex items-center gap-1.5 text-xs text-stone-400">
               <Users size={13} /> {spotsLeft} places restantes
@@ -156,7 +156,7 @@ export default function EventDetails() {
             <button
               onClick={handleRegister}
               disabled={registering || registered || spotsLeft <= 0}
-              className="mt-4 w-full rounded-lg bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+              className="mt-4 w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
             >
               {registered
                 ? "Inscription confirmée ✓"

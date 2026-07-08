@@ -9,9 +9,9 @@ import EventDetails from "./pages/EventDetails";
 import EventRegister from "./pages/EventRegister";
 import CreateEvent from "./pages/CreateEvent";
 import Dashboard from "./pages/Dashboard";
-import ParticipantsList from "./pages/ParticipantsList";
-import { AuthProvider } from "./context/AuthContext";
+import SuiviEvent from "./pages/SuiviEvent";
 import Updates from "./pages/Updates";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
@@ -29,7 +29,7 @@ function App() {
           <Route path="/event/:id/register" element={<EventRegister />} />
           <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/suivi-events/:eventId" element={<ParticipantsList />} />
+          <Route path="/dashboard/:eventId/participants" element={<SuiviEvent />} />
           <Route path="/updates" element={<Updates />} />
         </Routes>
       </Router>

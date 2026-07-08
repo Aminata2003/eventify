@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { PlusCircle, LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function NavbarOrganizer({ active = "" }) {
@@ -7,9 +7,8 @@ export default function NavbarOrganizer({ active = "" }) {
   const { logout } = useAuth();
 
   const links = [
-    { key: "create-event", label: "Créer un événement", to: "/create-event", icon: PlusCircle },
     { key: "dashboard", label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-    { key: "tracking", label: "Suivi événement", to: "/suivi-events/1", icon: ClipboardList },
+    { key: "tracking", label: "Suivi événement", to: "/dashboard/1/participants", icon: ClipboardList },
   ];
 
   function handleLogout() {

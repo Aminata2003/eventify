@@ -108,7 +108,7 @@ export default function ParticipantsList() {
               {presents}
             </p>
           </div>
-          <div className="rounded-xl bg-red-600 p-5 text-white">
+          <div className="rounded-xl bg-[#f6682f] p-5 text-white">
             <p className="text-xs uppercase tracking-wide text-red-100">
               Objectif d'inscription
             </p>
@@ -140,7 +140,7 @@ export default function ParticipantsList() {
                 setPage(1);
               }}
               placeholder="Rechercher par nom ou email..."
-              className="w-full rounded-lg border border-stone-300 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              className="w-full rounded-lg border border-stone-300 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:bg-[#f6682f] focus:outline-none focus:ring-1 focus:ring-red-500"
             />
           </div>
           <div className="flex gap-2">
@@ -212,35 +212,56 @@ export default function ParticipantsList() {
               {(page - 1) * PAGE_SIZE + paginated.length} sur {filtered.length}{" "}
               participants
             </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="rounded p-1 hover:bg-stone-100 disabled:opacity-40"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`h-6 w-6 rounded text-xs ${
-                    page === i + 1
-                      ? "bg-red-600 text-white"
-                      : "hover:bg-stone-100"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="rounded p-1 hover:bg-stone-100 disabled:opacity-40"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+            <div className="flex items-center gap-2">
+
+  {/* Bouton précédent */}
+  <button
+    onClick={() => setPage((p) => Math.max(1, p - 1))}
+    disabled={page === 1}
+    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition
+      ${
+        page === 1
+          ? "cursor-not-allowed border-stone-200 text-stone-300"
+          : "border-stone-300 text-stone-600 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
+      }`}
+  >
+    <ChevronLeft size={18} />
+  </button>
+
+  {/* Numéros */}
+  {Array.from({ length: totalPages }).map((_, i) => {
+    const current = i + 1;
+
+    return (
+      <button
+        key={current}
+        onClick={() => setPage(current)}
+        className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold transition ${
+          page === current
+            ? "border-[#f6682f] bg-[#f6682f] text-white shadow-md"
+            : "border-stone-300 text-stone-700 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
+        }`}
+      >
+        {current}
+      </button>
+    );
+  })}
+
+  {/* Bouton suivant */}
+  <button
+    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+    disabled={page === totalPages}
+    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition
+      ${
+        page === totalPages
+          ? "cursor-not-allowed border-stone-200 text-stone-300"
+          : "border-stone-300 text-stone-600 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
+      }`}
+  >
+    <ChevronRight size={18} />
+  </button>
+
+</div>
           </div>
         </div>
       </main>

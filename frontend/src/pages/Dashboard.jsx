@@ -136,7 +136,7 @@ export default function Dashboard() {
           </div>
           <button
             onClick={() => navigate("/create-event")}
-            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700"
+            className="flex items-center gap-2 rounded-lg bg-[#f6682f] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700"
           >
             <Plus size={16} /> Créer un événement
           </button>
@@ -180,7 +180,7 @@ export default function Dashboard() {
               <StatCard
                 icon={Wallet}
                 label="Revenu total"
-                value={`${(stats.revenue / 1000).toFixed(1)}k €`}
+               value={`${stats.revenue.toLocaleString("fr-FR")} FCFA`}
                 change={stats.revenue_change}
                 iconBg="bg-emerald-50"
                 iconColor="text-emerald-600"
@@ -227,12 +227,7 @@ export default function Dashboard() {
                     <p className="text-sm text-stone-500">
                       Aucun événement pour le moment.
                     </p>
-                    <button
-                      onClick={() => navigate("/create-event")}
-                      className="mt-2 text-sm font-medium text-red-600 hover:underline"
-                    >
-                      Créer votre premier événement
-                    </button>
+                   
                   </td>
                 </tr>
               ) : (
@@ -253,11 +248,11 @@ export default function Dashboard() {
                           <EventThumbnail src={event.image} alt={event.title} />
                           <div className="min-w-0">
                             <Link
-                              to={`/suivi-events/${event.id}`}
-                              className="block truncate font-medium text-stone-900 hover:text-red-600"
-                            >
-                              {event.title}
-                            </Link>
+                              to={`/event/${event.id}`}
+                         className="block truncate font-medium text-stone-900 hover:text-red-600"
+                          >
+                            {event.title}
+                           </Link>
                             <p className="truncate text-xs text-stone-400">
                               {event.location}
                             </p>

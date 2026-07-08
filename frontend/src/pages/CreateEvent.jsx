@@ -468,7 +468,7 @@ export default function CreateEvent() {
 
       className={`relative h-6 w-11 rounded-full transition-colors ${
         form.is_public
-          ? "bg-red-600"
+          ? "bg-[#f6682f]"
           : "bg-stone-300"
       }`}
     >
@@ -571,7 +571,7 @@ export default function CreateEvent() {
 {/* Message erreur */}
 {error && (
 
-  <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+  <p className="rounded-lg bg-[#f6682f] px-4 py-2 text-sm text-red-600">
 
     {error}
 
@@ -607,7 +607,7 @@ export default function CreateEvent() {
 
     disabled={submitting}
 
-    className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+    className="rounded-lg bg-[#f6682f] px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
 
   >
 
