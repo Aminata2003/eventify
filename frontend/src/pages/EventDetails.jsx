@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getEventById, getEvents, registerToEvent } from "../services/eventService";
+import { getEventById, getEvents } from "../services/eventService";
 
 export default function EventDetails() {
   const { id } = useParams();
@@ -12,14 +12,11 @@ export default function EventDetails() {
   const [event, setEvent] = useState(null);
   const [relatedEvents, setRelatedEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [registering, setRegistering] = useState(false);
-  const [registered, setRegistered] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setRegistered(false);
 
     Promise.all([getEventById(id), getEvents()])
       .then(([eventData, allEvents]) => {
@@ -38,17 +35,6 @@ export default function EventDetails() {
     };
   }, [id]);
 
-  async function handleRegister() {
-    setRegistering(true);
-
-    try {
-      await registerToEvent(event.id, {});
-      setRegistered(true);
-    } finally {
-      setRegistering(false);
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-50">
@@ -64,7 +50,7 @@ export default function EventDetails() {
     return (
       <div className="min-h-screen bg-stone-50">
         <Navbar />
-        <p className="mx-auto max-w-4xl px-6 py-16 text-center text-red-600">
+        <p className="mx-auto max-w-4xl px-6 py-16 text-center text-[#ea580c]">
           {error || "Événement introuvable."}
         </p>
       </div>
@@ -132,7 +118,7 @@ export default function EventDetails() {
               </p>
             </div>
 
-            <button className="text-sm font-medium text-red-600 hover:underline">
+            <button className="text-sm font-medium text-[#f6682f] hover:underline">
               Suivre
             </button>
           </div>
@@ -189,32 +175,17 @@ export default function EventDetails() {
 
 
             <button
-              onClick={handleRegister}
-              disabled={registering || registered || spotsLeft <= 0}
+              onClick={() => navigate(`/event/${event.id}/register`)}
+              disabled={spotsLeft <= 0}
               className="mt-4 w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60"
             >
-              {registered
-                ? "Inscription confirmée ✓"
-                : spotsLeft <= 0
-                ? "Complet"
-                : registering
-                ? "Inscription..."
-                : "S'inscrire"}
-            </button>
-
-
-            {/* AJOUT : Gestion participants */}
-            <button
-              onClick={() => navigate(`/dashboard/${event.id}/participants`)}
-              className="mt-3 w-full rounded-lg border border-[#f6682f] py-2.5 text-sm font-medium text-[#f6682f] transition hover:bg-[#f6682f] hover:text-white"
-            >
-              Gérer les participants
+              {spotsLeft <= 0 ? "Complet" : "S'inscrire"}
             </button>
 
           </div>
 
 
-          <div className="rounded-xl bg-red-50 p-4 text-xs text-red-700">
+          <div className="rounded-xl bg-[#f6682f]/10 p-4 text-xs text-[#ea580c]">
             Politique de remboursement : les tarifs préférentiels ne sont pas
             remboursables. Contactez l'organisateur pour toute question.
           </div>

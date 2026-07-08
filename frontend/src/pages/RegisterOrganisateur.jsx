@@ -1,10 +1,25 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Calendar, Building2, Mail, Lock, TrendingUp, BarChart3 } from "lucide-react";
-import { registerOrganizer } from "../services/eventService";
+import { useAuth } from "../context/AuthContext";
+
+const getServerError = (error) => {
+  const data = error?.response?.data;
+  if (!data) return "Une erreur est survenue, réessaie dans un instant.";
+  if (typeof data === "string") return data;
+  if (data.detail) return data.detail;
+  if (data.error) return data.error;
+  const firstField = ["email", "name", "password", "role"].find((key) => data[key]);
+  if (firstField) {
+    const value = data[firstField];
+    return Array.isArray(value) ? value[0] : value;
+  }
+  return JSON.stringify(data);
+};
 
 export default function RegisterOrganisateur() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -38,15 +53,15 @@ export default function RegisterOrganisateur() {
 
     setSubmitting(true);
     try {
-      await registerOrganizer({
+      await register({
         name: form.name,
         email: form.email,
         password: form.password,
         role: "organizer",
       });
-      navigate("/dashboard");
-    } catch {
-      setError("Une erreur est survenue, réessaie dans un instant.");
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(getServerError(err));
     } finally {
       setSubmitting(false);
     }
@@ -176,10 +191,15 @@ export default function RegisterOrganisateur() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-whitehover:bg-[#ea580c] disabled:opacity-60"
+            className="w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60"
           >
             {submitting ? "Création..." : "Créer mon compte organisateur →"}
           </button>
+          {error && (
+            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
+          )}
         </form>
 
         <p className="mt-4 text-center text-sm text-stone-500">

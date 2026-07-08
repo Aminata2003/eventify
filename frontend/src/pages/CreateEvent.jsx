@@ -33,15 +33,9 @@ export default function CreateEvent() {
     imageFile: null,
   });
 
-
   const [imagePreview, setImagePreview] = useState(null);
-
   const [submitting, setSubmitting] = useState(false);
-
   const [error, setError] = useState(null);
-
-
-  // AJOUT : gestion des emails privés
   const [newEmail, setNewEmail] = useState("");
 
   const [showParticipants, setShowParticipants] = useState(false);
@@ -49,15 +43,20 @@ export default function CreateEvent() {
 
 
   function handleChange(field, value) {
-
     setForm((prev) => ({
       ...prev,
       [field]: value,
     }));
-
   }
 
-
+  function handleDateTimeChange(value) {
+    const [datePart, timePart] = value.split("T");
+    setForm((prev) => ({
+      ...prev,
+      date: datePart || prev.date,
+      time: timePart || prev.time,
+    }));
+  }
 
   function handleImageChange(e) {
 
@@ -177,40 +176,15 @@ export default function CreateEvent() {
 
 
       const payload = {
-
-
         title: form.title,
-
-
         description: form.description,
-
-
         date: form.date,
-
-
         time: form.time,
-
-
         category: form.category,
-
-
         places: Number(form.places),
-
-
         location: form.location,
-
-
         is_public: form.is_public,
-
-
-        allowed_users: form.is_public
-          ? []
-          : form.allowed_users,
-
-
-
-        image: imagePreview,
-
+        allowed_users: form.is_public ? [] : form.allowed_users,
       };
 
 
@@ -418,13 +392,8 @@ export default function CreateEvent() {
 
               <input
                 type="datetime-local"
-                value={form.date}
-                onChange={(e) =>
-                  handleChange(
-                    "date",
-                    e.target.value
-                  )
-                }
+                value={form.date ? `${form.date}T${form.time || "00:00"}` : ""}
+                onChange={(e) => handleDateTimeChange(e.target.value)}
                 className="mt-2 w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               />
 

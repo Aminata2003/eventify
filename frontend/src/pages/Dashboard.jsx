@@ -111,6 +111,7 @@ export default function Dashboard() {
     setDeletingId(id);
     try {
       await deleteEvent(id);
+      setEvents((prev) => prev.filter((event) => event.id !== id));
       loadData();
     } finally {
       setDeletingId(null);

@@ -1,24 +1,49 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import * as authService from "../services/authService";
+import { getAccessToken } from "../services/api";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [initializing, setInitializing] = useState(true);
 
-  const login = (email, role = "participant") => {
-    setUser({ email, role });
+  useEffect(() => {
+    async function restoreUser() {
+      const token = getAccessToken();
+      if (token) {
+        try {
+          const currentUser = await authService.getCurrentUser();
+          setUser(currentUser);
+        } catch {
+          setUser(null);
+        }
+      }
+      setInitializing(false);
+    }
+    restoreUser();
+  }, []);
+
+  const login = async (email, password) => {
+    const userData = await authService.login(email, password);
+    setUser(userData);
+    return userData;
   };
 
-  const register = ({ email, role = "participant", name }) => {
-    setUser({ email, role, name });
+  const register = async ({ name, email, password, role = "participant" }) => {
+    await authService.register(name, email, password, role);
+    const userData = await authService.login(email, password);
+    setUser(userData);
+    return userData;
   };
 
   const logout = () => {
+    authService.logout();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, initializing }}>
       {children}
     </AuthContext.Provider>
   );

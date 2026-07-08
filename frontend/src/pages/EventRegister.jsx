@@ -1,37 +1,88 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, MapPin, CheckCircle2 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { mockEvents } from "../data/mockEvents";
+import Footer from "../components/Footer";
+import { getEventById, registerToEvent } from "../services/eventService";
+import { useAuth } from "../context/AuthContext";
+import { formatDateLabel } from "../utils/eventHelpers";
 
 function EventRegister() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const event = mockEvents.find((e) => e.id === Number(id));
-
-  const isPaid = event.price.toLowerCase() !== "gratuit";
-  const [formData, setFormData] = useState({ name: "", email: "", paymentMethod: isPaid ? "Carte bancaire" : "" });
+  const { user } = useAuth();
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    paymentMethod: "Carte bancaire",
+  });
 
-  if (!event) {
-    return (
-      <div className="min-h-screen bg-orange-50/30">
-        <Navbar />
-        <p className="text-center text-gray-500 mt-16">Événement introuvable.</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    let active = true;
+    getEventById(id)
+      .then((data) => {
+        if (!active) return;
+        setEvent(data);
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("Impossible de charger cet événement.");
+      })
+      .finally(() => {
+        if (!active) return;
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const isPaid = event?.price && String(event.price).toLowerCase() !== "gratuit";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Branchement API à venir (eventService.registerToEvent)
-    console.log("Inscription à l'événement", event.id, formData);
-    setIsConfirmed(true);
+    setSubmitError(null);
+    if (!event) return;
+    try {
+      await registerToEvent(event.id, {
+        name: formData.name,
+        email: formData.email,
+        paymentMethod: isPaid ? formData.paymentMethod : "",
+      });
+      setIsConfirmed(true);
+    } catch (err) {
+      setSubmitError(
+        err.response?.data?.detail || "Impossible de vous inscrire pour le moment."
+      );
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-orange-50/30">
+        <Navbar />
+        <p className="mx-auto max-w-4xl px-6 py-16 text-center text-stone-500">Chargement de l'événement...</p>
+      </div>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <div className="min-h-screen bg-orange-50/30">
+        <Navbar />
+        <p className="mx-auto max-w-4xl px-6 py-16 text-center text-[#ea580c]">{error || "Événement introuvable."}</p>
+      </div>
+    );
+  }
 
   if (isConfirmed) {
     return (
@@ -79,7 +130,7 @@ function EventRegister() {
 
             <div className="flex items-center gap-1 text-sm text-gray-500 mt-3">
               <Calendar size={14} />
-              {event.dateLabel} · {event.time}
+              {formatDateLabel(event.date)} · {event.time}
             </div>
             <div className="flex items-center gap-1 text-sm text-gray-500 mt-1.5">
               <MapPin size={14} />

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { History, Calendar, MapPin } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { mockEvents } from "../data/mockEvents";
+import Footer from "../components/Footer";
 
 function timeAgo(dateString) {
   const diffMs = Date.now() - new Date(dateString).getTime();
@@ -28,7 +29,6 @@ function Updates() {
       <Navbar />
 
       <div className="flex-1 max-w-3xl mx-auto w-full px-8 pt-10 pb-16">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Mises à jour</h1>
         <p className="text-gray-500 mt-2">
           Suivez les derniers changements apportés aux événements.
         </p>
@@ -80,6 +80,7 @@ function Updates() {
           )}
         </div>
       </div>
+       <Footer />
     </div>
   );
 }

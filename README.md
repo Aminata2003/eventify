@@ -56,3 +56,15 @@ npm run dev
 - Inscription à un événement
 - Dashboard organisateur avec statistiques
 - Gestion des événements publics/privés
+
+## 🔗 Intégration frontend/backend
+
+Le frontend consomme déjà des services centralisés dans [frontend/src/services](frontend/src/services). Les points d’intégration ont été alignés sur les contrats suivants :
+
+- GET /api/events/ → liste des événements
+- GET /api/events/<id>/ → détail d’un événement
+- POST /api/events/ → création d’un événement
+- GET /api/events/my-events/ → événements de l’organisateur connecté
+- POST /api/events/<id>/register/ → inscription à un événement
+- GET /api/dashboard/stats/ → statistiques du dashboard
+- POST /api/auth/login/ → connexion via JWT

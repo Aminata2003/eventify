@@ -14,42 +14,46 @@ import {
   mockParticipants,
   mockDashboardStats,
 } from "../data/mockData";
+import { api } from "./api";
 
 const delay = (ms = 400) => new Promise((res) => setTimeout(res, ms));
 
-// --- Configuration API réelle (à activer plus tard) ---
-// import axios from "axios";
-// const api = axios.create({ baseURL: import.meta.env.VITE_API_URL });
-// api.interceptors.request.use((config) => {
-//   const token = localStorage.getItem("access_token");
-//   if (token) config.headers.Authorization = `Bearer ${token}`;
-//   return config;
-// });
-
 export async function getEvents() {
-  // MOCK
+  // Prefer real API if configured
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.get("/events/");
+    return res.data;
+  }
+  // fallback mock
   await delay();
   return mockEvents;
-
-  // API réelle
-  // const res = await api.get("/events/");
-  // return res.data;
 }
 
 export async function getEventById(id) {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.get(`/events/${id}/`);
+    return res.data;
+  }
   await delay();
   const event = mockEvents.find((e) => String(e.id) === String(id));
   if (!event) throw new Error("Événement introuvable");
   return event;
-
-  // API réelle
-  // const res = await api.get(`/events/${id}/`);
-  // return res.data;
 }
 
 export async function createEvent(payload) {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    // handle file uploads
+    if (payload.image instanceof File) {
+      const formData = new FormData();
+      Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
+      const res = await api.post("/events/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    }
+    const res = await api.post("/events/", payload);
+    return res.data;
+  }
   await delay(600);
   const newEvent = {
     id: mockEvents.length + 1,
@@ -62,42 +66,32 @@ export async function createEvent(payload) {
   };
   mockEvents.push(newEvent);
   return newEvent;
-
-  // API réelle (avec image, on utilisera FormData)
-  // const formData = new FormData();
-  // Object.entries(payload).forEach(([key, value]) => formData.append(key, value));
-  // const res = await api.post("/events/", formData, {
-  //   headers: { "Content-Type": "multipart/form-data" },
-  // });
-  // return res.data;
 }
 
 export async function updateEvent(id, payload) {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.patch(`/events/${id}/`, payload);
+    return res.data;
+  }
   await delay();
   const idx = mockEvents.findIndex((e) => String(e.id) === String(id));
   if (idx !== -1) mockEvents[idx] = { ...mockEvents[idx], ...payload };
   return mockEvents[idx];
-
-  // API réelle
-  // const res = await api.patch(`/events/${id}/`, payload);
-  // return res.data;
 }
 
 export async function deleteEvent(id) {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    await api.delete(`/events/${id}/`);
+    return true;
+  }
   await delay();
   const idx = mockEvents.findIndex((e) => String(e.id) === String(id));
   if (idx !== -1) mockEvents.splice(idx, 1);
   return true;
-
-  // API réelle
-  // await api.delete(`/events/${id}/`);
-  // return true;
 }
 
 export async function getParticipants(eventId) {
-  // MOCK
+  // Prefer real API
   //
   // ⚠️ IMPORTANT : data/mockData.js ne contient QU'UNE seule liste globale
   // de participants (mockParticipants), pas encore de lien explicite
@@ -113,42 +107,39 @@ export async function getParticipants(eventId) {
   //   ];
   // et ici on ferait :
   //   return mockRegistrations.filter((r) => String(r.eventId) === String(eventId));
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.get(`/events/${eventId}/participants/`);
+    return res.data;
+  }
   await delay();
   return mockParticipants;
-
-  // API réelle
-  // const res = await api.get(`/events/${eventId}/participants/`);
-  // return res.data;
 }
 
 export async function registerToEvent(eventId, participantData) {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.post(`/events/${eventId}/register/`, participantData);
+    return res.data;
+  }
   await delay(500);
   return { success: true, event_id: eventId, ...participantData };
-
-  // API réelle
-  // const res = await api.post(`/events/${eventId}/register/`, participantData);
-  // return res.data;
 }
 
 export async function getDashboardStats() {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.get("/dashboard/stats/");
+    return res.data;
+  }
   await delay();
   return mockDashboardStats;
-
-  // API réelle
-  // const res = await api.get("/dashboard/stats/");
-  // return res.data;
 }
 
 export async function registerOrganizer(payload) {
-  // MOCK
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.post("/auth/register/organizer/", payload);
+    return res.data;
+  }
   await delay(600);
   return { success: true, ...payload };
-
-  // API réelle
-  // const res = await api.post("/auth/register/organizer/", payload);
-  // return res.data;
 }
 
 const STATUS_LABELS_FR = {
@@ -199,4 +190,12 @@ export function exportParticipantsCSV(eventId, participants) {
   link.download = `participants_event_${eventId}.csv`;
   link.click();
   URL.revokeObjectURL(url);
+}
+export async function getMyEvents() {
+  if (import.meta.env.VITE_API_URL) {
+    const response = await api.get("/events/my-events");
+    return response.data;
+  }
+  await delay();
+  return mockEvents.filter((e) => e.organizer && e.organizer.id === 10);
 }
