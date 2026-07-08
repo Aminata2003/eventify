@@ -176,7 +176,7 @@ export default function RegisterOrganisateur() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+            className="w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-whitehover:bg-[#ea580c] disabled:opacity-60"
           >
             {submitting ? "Création..." : "Créer mon compte organisateur →"}
           </button>

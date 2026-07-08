@@ -607,7 +607,7 @@ export default function CreateEvent() {
 
     disabled={submitting}
 
-    className="rounded-lg bg-[#f6682f] px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+    className="rounded-lg bg-[#f6682f] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60"
 
   >
 

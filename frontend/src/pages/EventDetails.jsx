@@ -156,7 +156,7 @@ export default function EventDetails() {
             <button
               onClick={handleRegister}
               disabled={registering || registered || spotsLeft <= 0}
-              className="mt-4 w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+              className="mt-4 w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60"
             >
               {registered
                 ? "Inscription confirmée ✓"
