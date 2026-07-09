@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Building2, Mail, Lock, TrendingUp, BarChart3 } from "lucide-react";
+import { Calendar, Building2, Mail, Lock, TrendingUp, BarChart3, Check, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const getServerError = (error) => {
@@ -17,6 +17,18 @@ const getServerError = (error) => {
   return JSON.stringify(data);
 };
 
+// Au moins 6 caractères, une majuscule, une minuscule, un chiffre.
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+
+function getPasswordChecks(password) {
+  return {
+    length: password.length >= 6,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    digit: /\d/.test(password),
+  };
+}
+
 export default function RegisterOrganisateur() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -29,6 +41,9 @@ export default function RegisterOrganisateur() {
   });
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const checks = getPasswordChecks(form.password);
 
   function handleChange(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -40,6 +55,12 @@ export default function RegisterOrganisateur() {
 
     if (!form.name.trim() || !form.email.trim() || !form.password) {
       setError("Merci de remplir tous les champs.");
+      return;
+    }
+    if (!PASSWORD_REGEX.test(form.password)) {
+      setError(
+        "Le mot de passe doit contenir au moins 6 caractères, avec une majuscule, une minuscule et un chiffre."
+      );
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -99,7 +120,7 @@ export default function RegisterOrganisateur() {
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 placeholder="Ex: Agence Creative ou Jean Dupont"
-                className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:border-[#f6682f] focus:outline-none focus:ring-1 focus:ring-[#f6682f]"
               />
             </div>
           </div>
@@ -118,7 +139,7 @@ export default function RegisterOrganisateur() {
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 placeholder="contact@organisation.fr"
-                className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm placeholder:text-stone-400 focus:border-[#f6682f] focus:outline-none focus:ring-1 focus:ring-[#f6682f]"
               />
             </div>
           </div>
@@ -137,7 +158,9 @@ export default function RegisterOrganisateur() {
                   type="password"
                   value={form.password}
                   onChange={(e) => handleChange("password", e.target.value)}
-                  className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
+                  className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm focus:border-[#f6682f] focus:outline-none focus:ring-1 focus:ring-[#f6682f]"
                 />
               </div>
             </div>
@@ -156,11 +179,21 @@ export default function RegisterOrganisateur() {
                   onChange={(e) =>
                     handleChange("confirmPassword", e.target.value)
                   }
-                  className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="w-full rounded-lg border border-stone-300 bg-stone-50 py-2.5 pl-9 pr-3 text-sm focus:border-[#f6682f] focus:outline-none focus:ring-1 focus:ring-[#f6682f]"
                 />
               </div>
             </div>
           </div>
+
+          {/* Indicateur de robustesse du mot de passe */}
+          {(passwordFocused || form.password.length > 0) && (
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg bg-stone-50 px-3 py-2 text-xs">
+              <PasswordRule ok={checks.length} label="6 caractères min." />
+              <PasswordRule ok={checks.uppercase} label="1 majuscule" />
+              <PasswordRule ok={checks.lowercase} label="1 minuscule" />
+              <PasswordRule ok={checks.digit} label="1 chiffre" />
+            </ul>
+          )}
 
           <label className="flex items-start gap-2 text-xs text-stone-500">
             <input
@@ -183,7 +216,7 @@ export default function RegisterOrganisateur() {
           </label>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-[#f6682f]">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
               {error}
             </p>
           )}
@@ -195,11 +228,6 @@ export default function RegisterOrganisateur() {
           >
             {submitting ? "Création..." : "Créer mon compte organisateur →"}
           </button>
-          {error && (
-            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </p>
-          )}
         </form>
 
         <p className="mt-4 text-center text-sm text-stone-500">
@@ -216,5 +244,19 @@ export default function RegisterOrganisateur() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function PasswordRule({ ok, label }) {
+  const Icon = ok ? Check : X;
+  return (
+    <li
+      className={`flex items-center gap-1.5 ${
+        ok ? "text-emerald-600" : "text-stone-400"
+      }`}
+    >
+      <Icon size={12} />
+      {label}
+    </li>
   );
 }

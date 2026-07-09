@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Event, Registration
@@ -118,6 +120,15 @@ class OrganizerRegisterSerializer(serializers.Serializer):
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("Un compte avec cet email existe déjà.")
+        return value
+
+    def validate_password(self, value):
+        # Au moins 6 caractères, une majuscule, une minuscule, un chiffre.
+        if not re.match(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$', value):
+            raise serializers.ValidationError(
+                "Le mot de passe doit contenir au moins 6 caractères, "
+                "une majuscule, une minuscule et un chiffre."
+            )
         return value
 
     def create(self, validated_data):

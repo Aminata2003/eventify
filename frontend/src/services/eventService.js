@@ -4,10 +4,6 @@
 //
 // Toutes les pages appellent ces fonctions et ne connaissent jamais
 // la source réelle des données (mock ou API Django).
-//
-// Les données mockées viennent de src/data/mockData.js, LA source unique
-// du projet (celle avec le commentaire "source unique pour toute
-// l'application"). Ne jamais dupliquer ces données ailleurs.
 
 import {
   mockEvents,
@@ -19,12 +15,10 @@ import { api } from "./api";
 const delay = (ms = 400) => new Promise((res) => setTimeout(res, ms));
 
 export async function getEvents() {
-  // Prefer real API if configured
   if (import.meta.env.VITE_API_URL) {
     const res = await api.get("/events/");
     return res.data;
   }
-  // fallback mock
   await delay();
   return mockEvents;
 }
@@ -42,7 +36,6 @@ export async function getEventById(id) {
 
 export async function createEvent(payload) {
   if (import.meta.env.VITE_API_URL) {
-    // handle file uploads
     if (payload.image instanceof File) {
       const formData = new FormData();
       Object.entries(payload).forEach(([k, v]) => formData.append(k, v));
@@ -91,22 +84,6 @@ export async function deleteEvent(id) {
 }
 
 export async function getParticipants(eventId) {
-  // Prefer real API
-  //
-  // ⚠️ IMPORTANT : data/mockData.js ne contient QU'UNE seule liste globale
-  // de participants (mockParticipants), pas encore de lien explicite
-  // "quel participant est inscrit à quel événement". `eventId` n'est donc
-  // pas encore utilisé pour filtrer : tous les événements affichent
-  // temporairement les 5 mêmes participants de démonstration.
-  //
-  // Pour que chaque événement ait SES propres participants, il faudrait
-  // dans data/mockData.js une structure du type :
-  //   export const mockRegistrations = [
-  //     { id: 1, eventId: 1, name: "Aminata Diop", email: "...", ... },
-  //     { id: 2, eventId: 2, name: "Moussa Fall", email: "...", ... },
-  //   ];
-  // et ici on ferait :
-  //   return mockRegistrations.filter((r) => String(r.eventId) === String(eventId));
   if (import.meta.env.VITE_API_URL) {
     const res = await api.get(`/events/${eventId}/participants/`);
     return res.data;
@@ -142,6 +119,21 @@ export async function registerOrganizer(payload) {
   return { success: true, ...payload };
 }
 
+// NOUVEAU : liste des comptes déjà inscrits sur la plateforme.
+// Utilisé pour choisir les invités d'un événement privé par sélection,
+// au lieu de devoir taper leur email manuellement.
+// Utilise le UserViewSet déjà exposé côté Django (GET /api/users/).
+export async function getUsers() {
+  if (import.meta.env.VITE_API_URL) {
+    const res = await api.get("/users/");
+    return res.data;
+  }
+  // Pas de liste mockée d'utilisateurs pour l'instant : cette fonctionnalité
+  // nécessite le backend pour être testée avec de vraies données.
+  await delay();
+  return [];
+}
+
 const STATUS_LABELS_FR = {
   confirmed: "Confirmé",
   pending: "En attente",
@@ -156,9 +148,6 @@ function splitFullName(fullName) {
 }
 
 export function exportParticipantsCSV(eventId, participants) {
-  // Séparateur ";" : celui qu'Excel en français attend par défaut.
-  // Ouvert directement dans Excel (double-clic), le fichier s'affiche
-  // en vraies colonnes, sans qu'aucun séparateur ne soit visible.
   const header = ["Nom", "Prénom", "Email", "Date d'inscription", "Statut"];
 
   const rows = participants.map((p) => {
@@ -179,8 +168,6 @@ export function exportParticipantsCSV(eventId, participants) {
 
   const csvContent = [header.join(";"), ...rows].join("\r\n");
 
-  // Le BOM UTF-8 (\uFEFF) est indispensable pour qu'Excel affiche
-  // correctement les accents (é, è, à...) à l'ouverture du fichier.
   const blob = new Blob(["\uFEFF" + csvContent], {
     type: "text/csv;charset=utf-8;",
   });
@@ -191,6 +178,7 @@ export function exportParticipantsCSV(eventId, participants) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
 export async function getMyEvents() {
   if (import.meta.env.VITE_API_URL) {
     const response = await api.get("/events/my-events");

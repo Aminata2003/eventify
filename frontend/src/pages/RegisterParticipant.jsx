@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Check, X } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 
@@ -18,6 +18,18 @@ const getServerError = (error) => {
   return JSON.stringify(data);
 };
 
+// Au moins 6 caractères, une majuscule, une minuscule, un chiffre.
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+
+function getPasswordChecks(password) {
+  return {
+    length: password.length >= 6,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    digit: /\d/.test(password),
+  };
+}
+
 function RegisterParticipant() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -30,6 +42,9 @@ function RegisterParticipant() {
   });
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const checks = getPasswordChecks(formData.password);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -41,6 +56,12 @@ function RegisterParticipant() {
 
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.password) {
       setError("Merci de remplir tous les champs.");
+      return;
+    }
+    if (!PASSWORD_REGEX.test(formData.password)) {
+      setError(
+        "Le mot de passe doit contenir au moins 6 caractères, avec une majuscule, une minuscule et un chiffre."
+      );
       return;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -118,6 +139,8 @@ function RegisterParticipant() {
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleChange("password", e.target.value)}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   placeholder="••••••••"
                   className="bg-transparent outline-none w-full text-sm"
                 />
@@ -139,6 +162,16 @@ function RegisterParticipant() {
               </div>
             </div>
           </div>
+
+          {/* Indicateur de robustesse du mot de passe */}
+          {(passwordFocused || formData.password.length > 0) && (
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg bg-gray-50 px-3 py-2 text-xs">
+              <PasswordRule ok={checks.length} label="6 caractères min." />
+              <PasswordRule ok={checks.uppercase} label="1 majuscule" />
+              <PasswordRule ok={checks.lowercase} label="1 minuscule" />
+              <PasswordRule ok={checks.digit} label="1 chiffre" />
+            </ul>
+          )}
 
           <div className="flex items-center gap-2 text-sm">
             <input
@@ -177,6 +210,20 @@ function RegisterParticipant() {
         </div>
       </div>
     </div>
+  );
+}
+
+function PasswordRule({ ok, label }) {
+  const Icon = ok ? Check : X;
+  return (
+    <li
+      className={`flex items-center gap-1.5 ${
+        ok ? "text-emerald-600" : "text-gray-400"
+      }`}
+    >
+      <Icon size={12} />
+      {label}
+    </li>
   );
 }
 
