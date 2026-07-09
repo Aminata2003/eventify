@@ -4,10 +4,18 @@ import { Link } from "react-router-dom";
 
 function EventCard({ event }) {
 
-  console.log("PRIX :", event.price, "TYPE :", typeof event.price);
+  const formattedDate = event.date
+    ? new Date(event.date).toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
+
 
   // Gestion du prix
   const formatPrice = () => {
+
     if (
       event.price === null ||
       event.price === undefined ||
@@ -17,27 +25,36 @@ function EventCard({ event }) {
       return "Don";
     }
 
-    // Si le prix est déjà un texte comme "10 000 FCFA"
-    if (typeof event.price === "string" && isNaN(Number(event.price))) {
+
+    if (
+      typeof event.price === "string" &&
+      isNaN(Number(event.price))
+    ) {
       return event.price;
     }
 
+
     const price = Number(event.price);
+
 
     if (price === 0) {
       return "Gratuit";
     }
 
-    return `${price.toLocaleString("fr-FR")} ${event.price_currency || "FCFA"}`;
+
+    return `${price.toLocaleString("fr-FR")} ${
+      event.price_currency || "FCFA"
+    }`;
   };
 
 
   return (
 
-    <div className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden bg-white flex flex-col">
+    <div className="rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
 
 
       <div className="relative">
+
 
         <img
           src={
@@ -45,17 +62,17 @@ function EventCard({ event }) {
             "https://via.placeholder.com/600x400"
           }
           alt={event.title}
-          className="w-full h-48 object-cover"
+          className="h-48 w-full object-cover"
         />
 
 
-        <span className="absolute top-3 left-3 bg-white text-xs font-medium px-2 py-1 rounded">
+        <span className="absolute left-3 top-3 rounded bg-white px-2 py-1 text-xs font-medium">
           {event.category}
         </span>
 
 
-        <button className="absolute top-3 right-3 bg-white rounded-full p-1.5">
-          <Heart size={16} className="text-gray-500"/>
+        <button className="absolute right-3 top-3 rounded-full bg-white p-1.5">
+          <Heart size={16} className="text-gray-500" />
         </button>
 
 
@@ -63,32 +80,30 @@ function EventCard({ event }) {
 
 
 
-      <div className="p-6 flex flex-col flex-1">
+      <div className="flex flex-1 flex-col p-6">
 
 
-        <div className="flex items-center gap-1 text-xs text-primary font-medium">
+        <div className="flex items-center gap-1 text-xs font-medium text-primary">
 
-          <Calendar size={12}/>
+          <Calendar size={12} />
 
-          {new Date(event.date).toLocaleDateString("fr-FR")}
+          {formattedDate}
 
-          {" · "}
-
-          {event.time}
+          {event.time && ` • ${event.time}`}
 
         </div>
 
 
 
-        <h3 className="font-semibold text-gray-900 mt-2">
+        <h3 className="mt-2 font-semibold leading-snug text-gray-900">
           {event.title}
         </h3>
 
 
 
-        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+        <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
 
-          <MapPin size={12}/>
+          <MapPin size={12} />
 
           {event.venue || event.location}
 
@@ -96,25 +111,40 @@ function EventCard({ event }) {
 
 
 
-        <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-gray-500">
           {event.description}
         </p>
 
 
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t">
+        <div className="mt-3 text-xs text-gray-500">
 
-          <span className="font-semibold">
+          {event.capacity && (
+            <>
+              {event.registrations_count ?? 0}/{event.capacity} participants
+            </>
+          )}
+
+        </div>
+
+
+
+        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
+
+
+          <span className="font-semibold text-gray-900">
             {formatPrice()}
           </span>
+
 
 
           <Link
             to={`/event/${event.id}`}
             className="text-sm font-medium text-primary hover:underline"
           >
-            Voir
+            Voir les détails
           </Link>
+
 
         </div>
 
