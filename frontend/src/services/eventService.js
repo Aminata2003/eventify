@@ -1,4 +1,9 @@
 // eventService.js
+//
+// >>> SEUL FICHIER À MODIFIER LE JOUR DE L'INTÉGRATION BACKEND <<<
+//
+// Toutes les pages appellent ces fonctions et ne connaissent jamais
+// la source réelle des données (mock ou API Django).
 
 import {
   mockEvents,
@@ -281,6 +286,27 @@ export async function getMyEvents(){
   return mockEvents.filter(
     e=>e.organizer?.id===10
   );
+}
+
+
+
+// ================= USERS =================
+
+// Liste des utilisateurs inscrits sur la plateforme
+// Utilisé pour choisir les invités d'un événement privé
+
+export async function getUsers(){
+
+  if(USE_API){
+
+    const res = await api.get("/users/");
+
+    return res.data;
+  }
+
+  await delay();
+
+  return [];
 }
 
 
