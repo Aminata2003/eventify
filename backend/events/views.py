@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Event, Registration
+from .filters import EventFilter
 from .serializers import (
     EventCreateSerializer,
     EventSerializer,
@@ -36,6 +37,7 @@ class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.select_related("organizer").order_by("-created_at")
     serializer_class = EventSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    filterset_class = EventFilter
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
@@ -54,8 +56,7 @@ class EventViewSet(viewsets.ModelViewSet):
         )
         return user
 
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+   
 
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def my_events(self, request):

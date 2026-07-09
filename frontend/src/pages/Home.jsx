@@ -111,7 +111,8 @@ function Home() {
       <section className="w-full -mt-12 relative z-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="bg-white rounded-xl shadow-md p-4">
-            <FilterBar filters={filters} setFilters={setFilters} onSelectCategory={setActiveCategory} />
+            <FilterBar filters={filters} setFilters={setFilters} />
+            <main id="results-section" className="max-w-6xl mx-auto px-6 py-8"></main>
           </div>
         </div>
       </section>
