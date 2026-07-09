@@ -35,7 +35,7 @@ export const mockEvents = [
   },
   {
     id: 3,
-    category: "Gastronomie",
+    category: "TEST MOCK",
     visibility: "public",
     image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600",
     date: "2026-09-05",

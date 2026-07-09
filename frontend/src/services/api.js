@@ -64,7 +64,7 @@ api.interceptors.response.use(
 			}
 
 			try {
-				const resp = await axios.post(`${BASE_URL.replace(/\/api\/?$/, "")}/auth/token/refresh/`, { refresh });
+				const resp = await axios.post(`${BASE_URL}/auth/token/refresh/`, { refresh });
 				const newAccess = resp.data.access || resp.data.token || null;
 				if (newAccess) setTokens(newAccess, refresh);
 				processQueue(null, newAccess);
@@ -83,4 +83,3 @@ api.interceptors.response.use(
 );
 
 export { api, setTokens, clearTokens, getAccessToken, getRefreshToken };
-
