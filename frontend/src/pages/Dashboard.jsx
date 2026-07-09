@@ -792,7 +792,7 @@ export default function Dashboard() {
 
                             <Link
 
-                              to={`/event/${event.id}`}
+                             to={`/dashboard/${event.id}/participants`}
 
                               className="block truncate font-medium text-stone-900 hover:text-[#f6682f]"
 

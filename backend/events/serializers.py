@@ -19,11 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    organizer = UserSerializer(read_only=True)
-    capacity = serializers.SerializerMethodField()
+
+    capacity = serializers.ReadOnlyField()
+
+    registrations_count = serializers.SerializerMethodField()
+    confirmed_count = serializers.SerializerMethodField()
+    pending_count = serializers.SerializerMethodField()
+    waitlist_count = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Event
+
         fields = [
             "id",
             "title",
@@ -43,11 +50,43 @@ class EventSerializer(serializers.ModelSerializer):
             "organizer",
             "views_count",
             "registrations_count",
+            "confirmed_count",
+            "pending_count",
+            "waitlist_count",
             "status",
+            "created_at",
+            "updated_at",
         ]
 
-    def get_capacity(self, obj):
-        return obj.capacity
+
+
+    def get_registrations_count(self, obj):
+
+        return obj.registrations.count()
+
+
+
+    def get_confirmed_count(self, obj):
+
+        return obj.registrations.filter(
+            status="confirmed"
+        ).count()
+
+
+
+    def get_pending_count(self, obj):
+
+        return obj.registrations.filter(
+            status="pending"
+        ).count()
+
+
+
+    def get_waitlist_count(self, obj):
+
+        return obj.registrations.filter(
+            status="waitlist"
+        ).count()
 
 
 class EventCreateSerializer(serializers.ModelSerializer):

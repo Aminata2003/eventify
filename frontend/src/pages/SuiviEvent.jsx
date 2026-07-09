@@ -153,117 +153,180 @@ export default function ParticipantsList() {
           </div>
         </div>
 
-        {/* Tableau */}
-        <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-400">
-              <tr>
-                <th className="px-5 py-3 font-medium">Nom</th>
-                <th className="px-5 py-3 font-medium">Email</th>
-                <th className="px-5 py-3 font-medium">Date d'inscription</th>
-                <th className="px-5 py-3 font-medium">Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.map((p) => (
-                <tr key={p.id} className="border-t border-stone-100">
-                  <td className="flex items-center gap-2 px-5 py-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
-                      {p.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .slice(0, 2)}
-                    </span>
-                    {p.name}
-                  </td>
-                  <td className="px-5 py-3 text-stone-500">{p.email}</td>
-                  <td className="px-5 py-3 text-stone-500">
-                    {p.registered_at}
-                  </td>
-                  <td className="px-5 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        STATUS_STYLES[p.status]?.className ??
-                        "bg-stone-100 text-stone-600"
-                      }`}
-                    >
-                      {STATUS_STYLES[p.status]?.label ?? p.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {paginated.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-5 py-8 text-center text-stone-400"
-                  >
-                    Aucun participant ne correspond à cette recherche.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+       {/* Tableau */}
+<div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
+  <table className="w-full text-left text-sm">
 
-          <div className="flex items-center justify-between border-t border-stone-100 px-5 py-3 text-xs text-stone-400">
-            <span>
-              Affichage {paginated.length ? (page - 1) * PAGE_SIZE + 1 : 0}-
-              {(page - 1) * PAGE_SIZE + paginated.length} sur {filtered.length}{" "}
-              participants
+    <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-400">
+      <tr>
+        <th className="px-5 py-3 font-medium">
+          Nom
+        </th>
+
+        <th className="px-5 py-3 font-medium">
+          Email
+        </th>
+
+        <th className="px-5 py-3 font-medium">
+          Date d'inscription
+        </th>
+
+        {!event?.is_public && (
+          <th className="px-5 py-3 font-medium">
+            Statut
+          </th>
+        )}
+      </tr>
+    </thead>
+
+
+    <tbody>
+
+      {paginated.map((p) => (
+
+        <tr key={p.id} className="border-t border-stone-100">
+
+          <td className="flex items-center gap-2 px-5 py-3">
+
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
+
+              {p.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .slice(0, 2)}
+
             </span>
-            <div className="flex items-center gap-2">
 
-  {/* Bouton précédent */}
-  <button
-    onClick={() => setPage((p) => Math.max(1, p - 1))}
-    disabled={page === 1}
-    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition
-      ${
-        page === 1
-          ? "cursor-not-allowed border-stone-200 text-stone-300"
-          : "border-stone-300 text-stone-600 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
-      }`}
-  >
-    <ChevronLeft size={18} />
-  </button>
+            {p.name}
 
-  {/* Numéros */}
-  {Array.from({ length: totalPages }).map((_, i) => {
-    const current = i + 1;
+          </td>
 
-    return (
-      <button
-        key={current}
-        onClick={() => setPage(current)}
-        className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold transition ${
-          page === current
-            ? "border-[#f6682f] bg-[#f6682f] text-white shadow-md"
-            : "border-stone-300 text-stone-700 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
-        }`}
-      >
-        {current}
-      </button>
-    );
-  })}
 
-  {/* Bouton suivant */}
-  <button
-    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-    disabled={page === totalPages}
-    className={`flex h-9 w-9 items-center justify-center rounded-lg border transition
-      ${
-        page === totalPages
-          ? "cursor-not-allowed border-stone-200 text-stone-300"
-          : "border-stone-300 text-stone-600 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
-      }`}
-  >
-    <ChevronRight size={18} />
-  </button>
+          <td className="px-5 py-3 text-stone-500">
+            {p.email}
+          </td>
 
-</div>
+
+          <td className="px-5 py-3 text-stone-500">
+            {p.registered_at}
+          </td>
+
+
+
+          {!event?.is_public && (
+
+            <td className="px-5 py-3">
+
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                  STATUS_STYLES[p.status]?.className ??
+                  "bg-stone-100 text-stone-600"
+                }`}
+              >
+
+                {STATUS_STYLES[p.status]?.label ?? p.status}
+
+              </span>
+
+            </td>
+
+          )}
+
+
+        </tr>
+
+      ))}
+
+
+
+      {paginated.length === 0 && (
+
+        <tr>
+
+          <td
+            colSpan={!event?.is_public ? 4 : 3}
+            className="px-5 py-8 text-center text-stone-400"
+          >
+
+            Aucun participant ne correspond à cette recherche.
+
+          </td>
+
+        </tr>
+
+      )}
+
+
+    </tbody>
+
+  </table>
+
+          
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between border-t border-stone-100 px-5 py-3 text-xs text-stone-400">
+
+          <span>
+            Affichage {paginated.length ? (page - 1) * PAGE_SIZE + 1 : 0}-
+            {(page - 1) * PAGE_SIZE + paginated.length} sur {filtered.length} participants
+          </span>
+
+          <div className="flex items-center gap-2">
+
+            {/* Bouton précédent */}
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                page === 1
+                  ? "cursor-not-allowed border-stone-200 text-stone-300"
+                  : "border-stone-300 text-stone-600 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
+              }`}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+
+            {/* Numéros */}
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const current = i + 1;
+
+              return (
+                <button
+                  key={current}
+                  onClick={() => setPage(current)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold transition ${
+                    page === current
+                      ? "border-[#f6682f] bg-[#f6682f] text-white shadow-md"
+                      : "border-stone-300 text-stone-700 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
+                  }`}
+                >
+                  {current}
+                </button>
+              );
+            })}
+
+
+            {/* Bouton suivant */}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className={`flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+                page === totalPages
+                  ? "cursor-not-allowed border-stone-200 text-stone-300"
+                  : "border-stone-300 text-stone-600 hover:border-[#f6682f] hover:bg-[#f6682f]/10 hover:text-[#f6682f]"
+              }`}
+            >
+              <ChevronRight size={18} />
+            </button>
+
           </div>
+
         </div>
+
+         </div>
+        
       </main>
       <Footer />
     </div>

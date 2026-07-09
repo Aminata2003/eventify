@@ -100,8 +100,7 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         registration, created = Registration.objects.get_or_create(event=event, participant=participant)
         if not created:
             return Response({"detail": "Vous êtes déjà inscrit à cet événement."}, status=status.HTTP_200_OK)
-        event.registrations_count = event.registrations_count + 1
-        event.save(update_fields=["registrations_count"])
+        
         return Response({"success": True, "event_id": event.id, "participant": participant.email or serializer.validated_data.get("name", "")})
 
 
@@ -129,20 +128,58 @@ class UserRegisterView(APIView):
 
 
 class DashboardStatsViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+
+    permission_classes = [IsAuthenticated]
+
 
     def list(self, request):
-        total_events = Event.objects.count()
-        total_registrations = Registration.objects.count()
-        return Response(
-            {
-                "total_events": total_events,
-                "total_events_change": 12,
-                "page_views": 3800,
-                "page_views_change": 24,
-                "registrations": total_registrations,
-                "registrations_change": 8,
-                "revenue": 4200000,
-                "revenue_change": 15,
-            }
+
+        events = Event.objects.filter(
+            organizer=request.user
         )
+
+
+        registrations = Registration.objects.filter(
+            event__organizer=request.user
+        )
+
+
+
+        return Response({
+
+            "total_events": events.count(),
+
+
+            "registrations": registrations.count(),
+
+
+            "confirmed": registrations.filter(
+                status="confirmed"
+            ).count(),
+
+
+            "pending": registrations.filter(
+                status="pending"
+            ).count(),
+
+
+            "waitlist": registrations.filter(
+                status="waitlist"
+            ).count(),
+
+
+
+            "page_views": sum(
+                e.views_count for e in events
+            ),
+
+
+
+            "revenue": sum(
+                e.price * e.registrations.filter(
+                    status="confirmed"
+                ).count()
+                for e in events
+            )
+
+        })
