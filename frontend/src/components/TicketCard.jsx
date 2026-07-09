@@ -1,6 +1,22 @@
 import { MapPin, Calendar, Clock } from "lucide-react";
 import { categoryIcons } from "../data/categoryIcons";
 
+// Formatte une date "2026-08-24" en "24 août", sans dépendre d'un champ
+// dateLabel précalculé (qui n'existe pas dans les données réelles du backend).
+function formatDateLabel(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+}
+
+// Formatte le prix à partir des vrais champs du backend (price + price_currency)
+// au lieu d'un champ price précalculé en texte.
+function formatPrice(event) {
+  if (!event.price || Number(event.price) === 0) return "Gratuit";
+  return `${Number(event.price).toLocaleString("fr-FR")} ${event.price_currency ?? "FCFA"}`;
+}
+
 function TicketCard({ event }) {
   const Icon = categoryIcons[event.category];
 
@@ -10,14 +26,12 @@ function TicketCard({ event }) {
       <div className="w-28 sm:w-36 flex-shrink-0">
         <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
       </div>
-
       {/* Séparation en pointillés + encoches (effet billet) */}
       <div className="relative flex-shrink-0 w-0">
         <div className="absolute -top-3 -left-3 w-6 h-6 bg-orange-50/30 rounded-full" />
         <div className="absolute -bottom-3 -left-3 w-6 h-6 bg-orange-50/30 rounded-full" />
         <div className="h-full border-l-2 border-dashed border-gray-200" />
       </div>
-
       {/* Corps du billet */}
       <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
         <div>
@@ -30,26 +44,23 @@ function TicketCard({ event }) {
               Confirmé
             </span>
           </div>
-
           <h3 className="font-semibold text-gray-900 mt-1.5 leading-snug truncate">
             {event.title}
           </h3>
-
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <Calendar size={12} /> {event.dateLabel}
+              <Calendar size={12} /> {formatDateLabel(event.date)}
             </span>
             <span className="flex items-center gap-1">
               <Clock size={12} /> {event.time}
             </span>
             <span className="flex items-center gap-1">
-              <MapPin size={12} /> {event.venue}
+              <MapPin size={12} /> {event.venue || event.location}
             </span>
           </div>
         </div>
-
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-          <span className="text-sm font-semibold text-gray-900">{event.price}</span>
+          <span className="text-sm font-semibold text-gray-900">{formatPrice(event)}</span>
           <a href={`/event/${event.id}`} className="text-xs font-medium text-primary hover:underline">
             Voir le billet
           </a>

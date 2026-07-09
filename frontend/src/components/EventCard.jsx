@@ -1,35 +1,74 @@
 import { Heart, MapPin, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function EventCard({ event }) {
+  const formattedDate = event.date
+    ? new Date(event.date).toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
+
   return (
-    <div className="rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden bg-white flex flex-col">
+    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md flex flex-col">
       <div className="relative">
-        <img src={event.image} alt={event.title} className="w-full h-48 object-cover" />
-        <span className="absolute top-3 left-3 bg-white text-xs font-medium px-2 py-1 rounded">
+        <img
+          src={event.image}
+          alt={event.title}
+          className="h-48 w-full object-cover"
+        />
+
+        <span className="absolute left-3 top-3 rounded bg-white px-2 py-1 text-xs font-medium">
           {event.category}
         </span>
-        <button className="absolute top-3 right-3 bg-white rounded-full p-1.5">
+
+        <button className="absolute right-3 top-3 rounded-full bg-white p-1.5">
           <Heart size={16} className="text-gray-500" />
         </button>
       </div>
 
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center gap-1 text-xs text-primary font-medium">
+      <div className="flex flex-1 flex-col p-6">
+        <div className="flex items-center gap-1 text-xs font-medium text-primary">
           <Calendar size={12} />
-          {event.dateLabel} · {event.time}
+          {formattedDate}
+          {event.time && ` • ${event.time}`}
         </div>
-        <h3 className="font-semibold text-gray-900 mt-2 leading-snug">{event.title}</h3>
-        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-          <MapPin size={12} />
-          {event.venue}
-        </div>
-        <p className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">{event.description}</p>
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-          <span className="font-semibold text-gray-900">{event.price}</span>
-          <a href={`/event/${event.id}`} className="text-sm font-medium text-primary hover:underline">
-            {event.cta}
-          </a>
+        <h3 className="mt-2 font-semibold leading-snug text-gray-900">
+          {event.title}
+        </h3>
+
+        <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+          <MapPin size={12} />
+          {event.location}
+        </div>
+
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-gray-500">
+          {event.description}
+        </p>
+
+        <div className="mt-3 text-xs text-gray-500">
+          {event.capacity && (
+            <>
+              {event.registrations_count ?? 0}/{event.capacity} participants
+            </>
+          )}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
+          <span className="font-semibold text-gray-900">
+            {event.price > 0
+              ? `${event.price.toLocaleString("fr-FR")} FCFA`
+              : "Gratuit"}
+          </span>
+
+          <Link
+            to={`/event/${event.id}`}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Voir les détails
+          </Link>
         </div>
       </div>
     </div>
