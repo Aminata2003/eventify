@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { History, Calendar, MapPin } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { mockEvents } from "../data/mockEvents";
 import Footer from "../components/Footer";
+import { getEvents } from "../services/eventService";
 
 function timeAgo(dateString) {
   const diffMs = Date.now() - new Date(dateString).getTime();
@@ -15,14 +15,29 @@ function timeAgo(dateString) {
 }
 
 function Updates() {
-  const isLoggedIn = false; // même logique que Home, à remplacer par le vrai contexte auth
+  const isLoggedIn = false; // remplacer par contexte d'authentification si nécessaire
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getEvents()
+      .then((data) => {
+        if (!cancelled) setEvents(data);
+      })
+      .catch(() => {
+        if (!cancelled) setEvents([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updatedEvents = useMemo(() => {
-    return mockEvents
-      .filter((event) => isLoggedIn || event.visibility === "public") // US014
-      .filter((event) => event.updatedAt)
-      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-  }, []);
+    return events
+      .filter((event) => isLoggedIn || event.is_public)
+      .filter((event) => event.updated_at)
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+  }, [events]);
 
   return (
     <div className="min-h-screen bg-orange-50/30 flex flex-col">

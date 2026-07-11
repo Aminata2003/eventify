@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import * as authService from "../services/authService";
-import { getAccessToken } from "../services/api";
+import { getAccessToken, getRefreshToken, setTokens, BASE_URL, clearTokens } from "../services/api";
+import axios from "axios";
 
 const AuthContext = createContext(null);
 
@@ -13,7 +14,21 @@ export function AuthProvider({ children }) {
       const token = getAccessToken();
       if (token) {
         try {
-          const currentUser = await authService.getCurrentUser();
+          let currentUser = await authService.getCurrentUser();
+          if (!currentUser) {
+            const refresh = getRefreshToken();
+            if (refresh) {
+              try {
+                const resp = await axios.post(`${BASE_URL}/auth/token/refresh/`, { refresh });
+                const newAccess = resp.data.access || resp.data.token || null;
+                if (newAccess) setTokens(newAccess, refresh);
+                currentUser = await authService.getCurrentUser();
+              } catch (e) {
+                clearTokens();
+                currentUser = null;
+              }
+            }
+          }
           setUser(currentUser);
         } catch {
           setUser(null);

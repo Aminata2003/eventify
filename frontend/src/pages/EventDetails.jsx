@@ -1,39 +1,56 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Star, Share2, Copy } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getEventById, getEvents } from "../services/eventService";
+import { useAuth } from "../context/AuthContext";
+import { getEventById, getEvents, getEventReviews, postEventReview } from "../services/eventService";
 
 export default function EventDetails() {
-  const { id } = useParams();
+  const rawId = useParams().id;
+  const id = rawId && rawId !== "undefined" ? (isNaN(Number(rawId)) ? rawId : Number(rawId)) : null;
   const navigate = useNavigate();
 
+  const { user, initializing } = useAuth();
   const [event, setEvent] = useState(null);
   const [relatedEvents, setRelatedEvents] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(true);
+  const [reviewError, setReviewError] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [copyMessage, setCopyMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setReviewLoading(true);
+    setReviewError(null);
 
-    Promise.all([getEventById(id), getEvents()])
-      .then(([eventData, allEvents]) => {
+    Promise.all([getEventById(id), getEvents(), getEventReviews(id)])
+      .then(([eventData, allEvents, reviewsData]) => {
         if (cancelled) return;
 
         setEvent(eventData);
         setRelatedEvents(
           allEvents.filter((e) => String(e.id) !== String(id)).slice(0, 3)
         );
+        setReviews(Array.isArray(reviewsData) ? reviewsData : []);
       })
       .catch(() => !cancelled && setError("Impossible de charger cet événement."))
-      .finally(() => !cancelled && setLoading(false));
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+        setReviewLoading(false);
+      });
 
     return () => {
       cancelled = true;
     };
   }, [id]);
+
 
   if (loading) {
     return (
@@ -58,6 +75,24 @@ export default function EventDetails() {
   }
 
   const spotsLeft = event.capacity - event.registrations_count;
+  const eventPassed = event.date ? new Date(event.date) <= new Date() : false;
+  const averageRating = reviews.length
+    ? reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length
+    : 0;
+
+  const shareUrl = typeof window !== "undefined" ? window.location.href : `${window.location.origin}/event/${event.id}`;
+  const whatsappText = encodeURIComponent(`Découvrez cet événement : ${event.title} - ${shareUrl}`);
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyMessage("Lien copié !");
+      setTimeout(() => setCopyMessage(""), 2000);
+    } catch (err) {
+      setCopyMessage("Impossible de copier le lien.");
+      setTimeout(() => setCopyMessage(""), 2000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -107,20 +142,56 @@ export default function EventDetails() {
           </div>
 
 
-          <div className="flex items-center justify-between py-6">
+          <div className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs text-stone-400">
                 Organisé par
               </p>
 
               <p className="text-sm font-medium text-stone-800">
-                {event.organizer.name}
+                {event.organizer?.name || "Organisateur"}
               </p>
             </div>
 
             <button className="text-sm font-medium text-[#f6682f] hover:underline">
               Suivre
             </button>
+          </div>
+
+          <div className="mb-6 rounded-3xl border border-stone-200 bg-white p-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-stone-100 px-4 py-2 text-sm font-medium text-stone-800 hover:bg-stone-200"
+              >
+                <Copy size={16} /> Copier le lien
+              </button>
+              <a
+                href={`https://wa.me/?text=${whatsappText}`}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-[#25D366]/10 px-4 py-2 text-sm font-medium text-[#128C7E] hover:bg-[#25D366]/20"
+              >
+                <Share2 size={16} /> Partager sur WhatsApp
+              </a>
+            </div>
+            {copyMessage && (
+              <p className="mt-3 text-sm text-emerald-700">{copyMessage}</p>
+            )}
+          </div>
+
+          <div className="mb-6 rounded-3xl border border-stone-200 bg-white p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-sm font-semibold text-stone-900">
+                <Star size={18} className="text-yellow-500" />
+                {averageRating.toFixed(1)}
+              </div>
+              <span className="text-xs text-stone-500">({reviews.length} avis)</span>
+            </div>
+            <p className="mt-3 text-sm text-stone-600">
+              Les participants peuvent noter l'événement après sa tenue.
+            </p>
           </div>
 
 
@@ -195,6 +266,120 @@ export default function EventDetails() {
       </main>
 
 
+
+      {(eventPassed || reviews.length > 0) && (
+        <section className="mx-auto max-w-4xl px-6 pb-14">
+          <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-stone-900">Avis et notes</h2>
+                <p className="mt-1 text-sm text-stone-500">
+                  Retrouvez les retours des participants et laissez votre propre avis.
+                </p>
+              </div>
+              <div className="text-sm text-stone-500">
+                {reviews.length} avis
+              </div>
+            </div>
+
+            {reviewError && (
+              <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+                {reviewError}
+              </p>
+            )}
+
+            <div className="mt-6 space-y-6">
+              {reviewLoading ? (
+                <p className="text-sm text-stone-500">Chargement des avis...</p>
+              ) : reviews.length === 0 ? (
+                <p className="text-sm text-stone-500">Aucun avis pour le moment.</p>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-stone-900">{review.participant_name}</p>
+                        <div className="flex items-center gap-1 text-sm text-stone-700">
+                          <Star size={14} className="text-yellow-500" />
+                          {review.rating}/5
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="mt-2 text-sm leading-relaxed text-stone-600">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {eventPassed && (
+              <div className="mt-8 rounded-3xl border border-stone-200 bg-white p-6">
+                <h3 className="text-base font-semibold text-stone-900">Laisser un avis</h3>
+                <p className="mt-2 text-sm text-stone-500">
+                  Dites aux autres ce que vous avez pensé de cet événement.
+                </p>
+                {initializing ? null : user ? (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setReviewError(null);
+                      setReviewSubmitting(true);
+                      try {
+                        const newReview = await postEventReview(event.id, reviewForm);
+                        setReviews((prev) => [newReview, ...prev]);
+                        setReviewForm({ rating: 5, comment: "" });
+                      } catch (err) {
+                        const message = err.response?.data?.detail || err.response?.data?.event || err.response?.data?.participant || err.message || "Impossible d'envoyer l'avis.";
+                        setReviewError(message);
+                      } finally {
+                        setReviewSubmitting(false);
+                      }
+                    }}
+                    className="mt-4 space-y-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-stone-800">Note</label>
+                      <select
+                        value={reviewForm.rating}
+                        onChange={(e) => setReviewForm((prev) => ({ ...prev, rating: Number(e.target.value) }))}
+                        className="mt-2 w-full max-w-xs rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                      >
+                        {[5, 4, 3, 2, 1].map((value) => (
+                          <option key={value} value={value}>
+                            {value} étoile{value > 1 ? "s" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-stone-800">Commentaire</label>
+                      <textarea
+                        value={reviewForm.comment}
+                        onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
+                        rows={4}
+                        placeholder="Votre retour sur l'événement..."
+                        className="mt-2 w-full rounded-lg border border-stone-300 px-4 py-3 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={reviewSubmitting}
+                      className="inline-flex items-center justify-center rounded-lg bg-[#f6682f] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60"
+                    >
+                      {reviewSubmitting ? "Envoi..." : "Publier mon avis"}
+                    </button>
+                  </form>
+                ) : (
+                  <p className="mt-4 text-sm text-stone-500">
+                    Connectez-vous pour laisser votre avis.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {relatedEvents.length > 0 && (
         <section className="mx-auto max-w-4xl px-6 pb-14">

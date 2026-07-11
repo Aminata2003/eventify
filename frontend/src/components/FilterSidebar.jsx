@@ -1,7 +1,6 @@
 import { SlidersHorizontal } from "lucide-react";
-import { locations } from "../data/mockEvents";
 
-function FilterBar({ filters, setFilters }) {
+function FilterBar({ filters, setFilters, locations = [] }) {
   const handleChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
@@ -30,11 +29,11 @@ function FilterBar({ filters, setFilters }) {
           onChange={(e) => handleChange("location", e.target.value)}
           className="w-full mt-1 text-sm border-b border-gray-200 py-1 outline-none"
         >
-          {locations.map((loc) => (
-            <option key={loc} value={loc === "Sénégal (Tous)" ? "" : loc}>
-              {loc}
-            </option>
-          ))}
+            {locations.map((loc) => (
+              <option key={loc} value={loc === "Sénégal (Tous)" ? "" : loc}>
+                {loc}
+              </option>
+            ))}
         </select>
       </div>
 

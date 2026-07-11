@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import FilterBar from "../components/FilterSidebar";
 import EventCard from "../components/EventCard";
 import CategoryPills from "../components/CategoryPills";
-import { categories } from "../data/mockEvents";
+import { getEvents } from "../services/eventService";
 
 const PAGE_SIZE = 12;
 
@@ -149,51 +149,21 @@ export default function Events() {
 
 
 
-  // Appel API Backend
+  // Appel API Backend via service
   useEffect(() => {
-
-
+    let cancelled = false;
     async function fetchEvents() {
-
       try {
-
-        const params = new URLSearchParams();
-
-
-        if (searchQuery) {
-          params.append(
-            "search",
-            searchQuery
-          );
-        }
-
-
-        const response = await fetch(
-          `http://localhost:8000/api/events/?${params.toString()}`
-        );
-
-
-        const data = await response.json();
-
-
-        setEvents(data);
-
-
+        const data = await getEvents(searchQuery);
+        if (!cancelled) setEvents(data);
       } catch (error) {
-
-        console.error(
-          "Erreur récupération événements :",
-          error
-        );
-
+        console.error("Erreur récupération événements :", error);
       }
-
     }
-
-
     fetchEvents();
-
-
+    return () => {
+      cancelled = true;
+    };
   }, [searchQuery]);
 
 
@@ -259,6 +229,17 @@ export default function Events() {
     setSearchQuery("");
 
   };
+
+  // derive categories and locations from loaded events
+  const derivedCategories = useMemo(() => {
+    const set = new Set(events.map((e) => e.category).filter(Boolean));
+    return ["Tous les événements", ...Array.from(set)];
+  }, [events]);
+
+  const derivedLocations = useMemo(() => {
+    const set = new Set(events.map((e) => e.location).filter(Boolean));
+    return ["Sénégal (Tous)", ...Array.from(set)];
+  }, [events]);
 
 
 
@@ -327,6 +308,7 @@ export default function Events() {
           <FilterBar
             filters={filters}
             setFilters={setFilters}
+            locations={derivedLocations}
           />
 
         </div>
@@ -338,26 +320,14 @@ export default function Events() {
         <div className="mb-6">
 
           <CategoryPills
-
-            categories={categories}
-
+            categories={derivedCategories}
             active={activeCategory}
-
             onSelect={(category) => {
-
               setActiveCategory(category);
-
-
-              if (
-                category === "Tous les événements"
-              ) {
-
+              if (category === "Tous les événements") {
                 clearSearch();
-
               }
-
             }}
-
           />
 
         </div>

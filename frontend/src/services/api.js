@@ -5,7 +5,6 @@ const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 const api = axios.create({
 	baseURL: BASE_URL,
 	timeout: 10000,
-	headers: { "Content-Type": "application/json" },
 });
 
 // Token helpers use localStorage by default
@@ -23,7 +22,10 @@ const clearTokens = () => {
 // Attach access token
 api.interceptors.request.use((config) => {
 	const token = getAccessToken();
-	if (token) config.headers.Authorization = `Bearer ${token}`;
+	// Skip invalid token values that may have been stored by accident
+	if (token && token !== "null" && token !== "undefined") {
+		config.headers.Authorization = `Bearer ${token}`;
+	}
 	return config;
 });
 
@@ -60,6 +62,12 @@ api.interceptors.response.use(
 			if (!refresh) {
 				clearTokens();
 				isRefreshing = false;
+				// If this was a safe GET request, retry without auth header (public endpoint)
+				if ((originalRequest.method || "get").toLowerCase() === "get") {
+					const cloned = { ...originalRequest };
+					delete cloned.headers.Authorization;
+					return api(cloned);
+				}
 				return Promise.reject(err);
 			}
 
@@ -73,6 +81,12 @@ api.interceptors.response.use(
 			} catch (e) {
 				processQueue(e, null);
 				clearTokens();
+				// If refresh fails, try once without auth for safe GET requests
+				if ((originalRequest.method || "get").toLowerCase() === "get") {
+					const cloned = { ...originalRequest };
+					delete cloned.headers.Authorization;
+					return api(cloned);
+				}
 				return Promise.reject(e);
 			} finally {
 				isRefreshing = false;
@@ -82,4 +96,4 @@ api.interceptors.response.use(
 	}
 );
 
-export { api, setTokens, clearTokens, getAccessToken, getRefreshToken };
+export { api, setTokens, clearTokens, getAccessToken, getRefreshToken, BASE_URL };

@@ -1,10 +1,28 @@
 import re
 
+import uuid
+
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from rest_framework import serializers
-from .models import Event, Registration
+from .models import Event, Registration, Payment, Review
 
 User = get_user_model()
+
+
+class ImageOrURLField(serializers.Field):
+    def to_internal_value(self, data):
+        if data is None or data == "":
+            return ""
+
+        if hasattr(data, "read"):
+            return data
+
+        return str(data)
+
+    def to_representation(self, value):
+        return value or ""
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -20,6 +38,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
 
+    organizer = UserSerializer(read_only=True)
     capacity = serializers.ReadOnlyField()
 
     registrations_count = serializers.SerializerMethodField()
@@ -91,6 +110,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 class EventCreateSerializer(serializers.ModelSerializer):
     capacity = serializers.IntegerField(required=False, write_only=True)
+    image = ImageOrURLField(required=False, allow_null=True)
 
     class Meta:
         model = Event
@@ -111,11 +131,38 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "price_currency",
         ]
 
+    def _save_uploaded_image(self, image, request):
+        if not image or not hasattr(image, "read"):
+            return None
+
+        filename = f"event_images/{uuid.uuid4().hex}_{image.name}"
+        saved_path = default_storage.save(filename, ContentFile(image.read()))
+        url = default_storage.url(saved_path)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
     def create(self, validated_data):
+        request = self.context.get("request")
+        image = validated_data.get("image")
+        if hasattr(image, "read"):
+            validated_data["image"] = self._save_uploaded_image(image, request)
+
         capacity = validated_data.pop("capacity", None)
         if capacity is not None and "places" not in validated_data:
             validated_data["places"] = capacity
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        image = validated_data.get("image")
+        if hasattr(image, "read"):
+            validated_data["image"] = self._save_uploaded_image(image, request)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -133,6 +180,53 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def get_email(self, obj):
         return obj.participant.email
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    event_title = serializers.CharField(source="event.title", read_only=True)
+    participant_email = serializers.EmailField(source="participant.email", read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = [
+            "id",
+            "session_id",
+            "reference",
+            "status",
+            "provider",
+            "payment_method",
+            "amount",
+            "currency",
+            "phone",
+            "event_title",
+            "participant_email",
+            "created_at",
+        ]
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    participant_name = serializers.SerializerMethodField(read_only=True)
+    rating = serializers.IntegerField(min_value=1, max_value=5)
+
+    class Meta:
+        model = Review
+        fields = ["id", "participant", "participant_name", "rating", "comment", "created_at"]
+        read_only_fields = ["id", "participant", "participant_name", "created_at"]
+
+    def get_participant_name(self, obj):
+        return obj.participant.get_full_name() or obj.participant.username or obj.participant.email
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
+            raise serializers.ValidationError("Authentication required to post a review.")
+        validated_data["participant"] = request.user
+        # event should be provided via context by the view
+        event = self.context.get("event")
+        if not event:
+            raise serializers.ValidationError({"event": "Event context is required."})
+        validated_data["event"] = event
+        return super().create(validated_data)
 
 
 class RegisterEventSerializer(serializers.Serializer):

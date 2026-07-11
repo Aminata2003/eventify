@@ -68,3 +68,45 @@ Le frontend consomme déjà des services centralisés dans [frontend/src/service
 - POST /api/events/<id>/register/ → inscription à un événement
 - GET /api/dashboard/stats/ → statistiques du dashboard
 - POST /api/auth/login/ → connexion via JWT
+
+## ✉️ Notifications par email
+
+Le backend envoie les notifications suivantes :
+
+- Email de confirmation au participant après inscription (US007)
+- Email de notification à l’organisateur lorsqu’un participant s’inscrit (US011)
+- Email de rappel automatique envoyé la veille de l’événement aux participants et à l’organisateur
+
+### Configuration SMTP pour l’envoi de vrais emails
+
+Par défaut, si aucune configuration email SMTP n’est définie, Django utilisera le backend console (`EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend`) et affichera les messages dans le terminal.
+
+Pour recevoir les emails dans une vraie boîte mail, ajoutez ces variables dans `backend/.env` :
+
+```env
+DEFAULT_FROM_EMAIL=no-reply@eventify.dev
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=ton-email@example.com
+EMAIL_HOST_PASSWORD=ton-mot-de-passe-ou-app-password
+EMAIL_USE_TLS=true
+EMAIL_USE_SSL=false
+EMAIL_TIMEOUT=20
+```
+
+> Pour Gmail, utilisez un mot de passe d'application si vous avez l'authentification à deux facteurs activée.
+
+> Attention : ne mettez jamais votre mot de passe de compte principal dans `.env`.
+> Utilisez un "mot de passe d'application" Gmail ou un autre service SMTP sécurisé.
+
+### Commande de rappel
+
+Pour lancer manuellement le rappel automatique :
+
+```bash
+cd backend
+python manage.py send_event_reminders
+```
+
+Cette commande recherche les événements programmés pour le lendemain et envoie les emails aux participants confirmés et à l’organisateur.

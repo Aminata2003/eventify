@@ -3,12 +3,28 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Calendar, MapPin, CheckCircle2 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { getEventById, registerToEvent } from "../services/eventService";
+import { getEventById, registerToEvent, initiatePayment, confirmPayment } from "../services/eventService";
+import waveLogo from "../assets/wave.svg";
+import orangeLogo from "../assets/orange-money.svg";
 import { useAuth } from "../context/AuthContext";
 import { formatDateLabel } from "../utils/eventHelpers";
 
+const formatServerError = (err, fallback) => {
+  const data = err?.response?.data;
+  if (!data) return err?.response?.data?.detail || err?.message || fallback;
+  if (typeof data === "string") return data;
+  if (typeof data === "object") {
+    if (data.detail) return data.detail;
+    return Object.entries(data)
+      .map(([k, v]) => (Array.isArray(v) ? `${k}: ${v.join(" ")}` : `${k}: ${v}`))
+      .join(" | ");
+  }
+  return String(data);
+};
+
 function EventRegister() {
-  const { id } = useParams();
+  const rawId = useParams().id;
+  const id = rawId && rawId !== "undefined" ? (isNaN(Number(rawId)) ? rawId : Number(rawId)) : null;
   const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState(null);
@@ -16,10 +32,15 @@ function EventRegister() {
   const [error, setError] = useState(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [paymentError, setPaymentError] = useState(null);
+  const [paymentSession, setPaymentSession] = useState(null);
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
+    provider: "card",
     paymentMethod: "Carte bancaire",
+    phone: "",
   });
 
   useEffect(() => {
@@ -45,24 +66,74 @@ function EventRegister() {
   const isPaid = event?.price && String(event.price).toLowerCase() !== "gratuit";
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "provider") {
+      if (value === "card") {
+        setFormData((prev) => ({ ...prev, provider: value, paymentMethod: "Carte bancaire" }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          provider: value,
+          paymentMethod: prev.paymentMethod && prev.paymentMethod !== "Carte bancaire" ? prev.paymentMethod : "Wave",
+        }));
+      }
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
+    setPaymentError(null);
     if (!event) return;
+
+    if (isPaid) {
+      try {
+        const session = await initiatePayment(event.id, {
+          provider: formData.provider,
+          paymentMethod: formData.paymentMethod,
+          phone: formData.phone,
+          name: formData.name,
+          email: formData.email,
+          amount: event.price,
+        });
+        setPaymentSession(session);
+      } catch (err) {
+        setPaymentError(formatServerError(err, "Impossible de démarrer le paiement."));
+      }
+      return;
+    }
+
     try {
       await registerToEvent(event.id, {
         name: formData.name,
         email: formData.email,
-        paymentMethod: isPaid ? formData.paymentMethod : "",
+        paymentMethod: "",
       });
       setIsConfirmed(true);
     } catch (err) {
       setSubmitError(
         err.response?.data?.detail || "Impossible de vous inscrire pour le moment."
       );
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!paymentSession?.sessionId) {
+      setPaymentError("Session de paiement invalide, veuillez relancer le paiement.");
+      return;
+    }
+    setIsConfirmingPayment(true);
+    setPaymentError(null);
+    try {
+      await confirmPayment(paymentSession.sessionId, "demo-confirmation");
+      setIsConfirmed(true);
+    } catch (err) {
+      setPaymentError(formatServerError(err, "Impossible de confirmer le paiement."));
+    } finally {
+      setIsConfirmingPayment(false);
     }
   };
 
@@ -190,32 +261,120 @@ function EventRegister() {
             </div>
 
             {isPaid && (
-              <div>
-                <label htmlFor="paymentMethod" className="text-sm font-medium text-gray-800">
-                  Mode de paiement
-                </label>
-                <select
-                  id="paymentMethod"
-                  name="paymentMethod"
-                  value={formData.paymentMethod}
-                  onChange={handleChange}
-                  required
-                  className="w-full mt-1.5 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary transition"
-                >
-                  <option>Carte bancaire</option>
-                  <option>Mobile money</option>
-                  <option>Virement bancaire</option>
-                </select>
-              </div>
+              <>
+                <div>
+                  <label htmlFor="provider" className="text-sm font-medium text-gray-800">
+                    Mode de paiement
+                  </label>
+                  <select
+                    id="provider"
+                    name="provider"
+                    value={formData.provider}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-1.5 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary transition"
+                  >
+                    <option value="card">Carte bancaire</option>
+                    <option value="mobile_money">Mobile money (Wave / Orange Money)</option>
+                  </select>
+                  {formData.provider === "mobile_money" && (
+                    <div className="mt-3 flex items-center gap-3">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={formData.paymentMethod === "Wave"}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            setFormData((prev) => ({ ...prev, provider: "mobile_money", paymentMethod: "Wave" }));
+                            e.preventDefault();
+                          }
+                        }}
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, provider: "mobile_money", paymentMethod: "Wave" }))
+                        }
+                        className={`flex items-center gap-2 p-1 rounded-md cursor-pointer ${
+                          formData.paymentMethod === "Wave" ? "ring-2 ring-primary" : "hover:opacity-90"
+                        }`}
+                      >
+                        <img src={waveLogo} alt="Wave" className="w-12 h-8 object-contain" />
+                      </div>
+
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={formData.paymentMethod === "Orange Money"}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            setFormData((prev) => ({ ...prev, provider: "mobile_money", paymentMethod: "Orange Money" }));
+                            e.preventDefault();
+                          }
+                        }}
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, provider: "mobile_money", paymentMethod: "Orange Money" }))
+                        }
+                        className={`flex items-center gap-2 p-1 rounded-md cursor-pointer ${
+                          formData.paymentMethod === "Orange Money" ? "ring-2 ring-primary" : "hover:opacity-90"
+                        }`}
+                      >
+                        <img src={orangeLogo} alt="Orange Money" className="w-12 h-8 object-contain" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {formData.provider === "mobile_money" && (
+                  <div>
+                    <label htmlFor="phone" className="text-sm font-medium text-gray-800">
+                      Numéro mobile
+                    </label>
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="77 123 45 67"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      className="w-full mt-1.5 border border-gray-200 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-primary transition"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <button
               type="submit"
               className="w-full bg-primary text-white font-medium py-2.5 rounded-lg hover:bg-orange-700 transition mt-2"
             >
-              Confirmer mon inscription
+              {isPaid ? "Démarrer le paiement" : "Confirmer mon inscription"}
             </button>
+            {paymentError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {paymentError}
+              </div>
+            )}
           </form>
+
+          {paymentSession && (
+            <div className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5">
+              <h2 className="text-base font-semibold text-primary">Instructions de paiement</h2>
+              <p className="mt-3 text-sm text-gray-600">{paymentSession.instructions}</p>
+              <div className="mt-4 space-y-2 text-sm text-gray-700">
+                <p>
+                  Référence de paiement : <span className="font-medium">{paymentSession.paymentReference}</span>
+                </p>
+                <p>
+                  Montant : <span className="font-medium">{paymentSession.amount} {paymentSession.currency}</span>
+                </p>
+              </div>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={isConfirmingPayment}
+                className="mt-4 w-full bg-primary text-white font-medium py-2.5 rounded-lg hover:bg-orange-700 transition"
+              >
+                {isConfirmingPayment ? "Confirmation en cours..." : "J'ai payé / Simuler paiement"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

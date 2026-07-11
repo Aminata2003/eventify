@@ -57,6 +57,7 @@ class Registration(models.Model):
     event = models.ForeignKey(Event, related_name="registrations", on_delete=models.CASCADE)
     participant = models.ForeignKey(User, related_name="registrations", on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="confirmed")
+    reminder_sent = models.BooleanField(default=False)
     registered_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -64,3 +65,52 @@ class Registration(models.Model):
 
     def __str__(self):
         return f"{self.participant} -> {self.event}"
+
+
+class Payment(models.Model):
+    PROVIDER_CHOICES = (
+        ("card", "Carte bancaire"),
+        ("mobile_money", "Mobile money"),
+    )
+
+    STATUS_CHOICES = (
+        ("pending", "En attente"),
+        ("completed", "Complété"),
+        ("failed", "Échoué"),
+    )
+
+    event = models.ForeignKey(Event, related_name="payments", on_delete=models.CASCADE)
+    participant = models.ForeignKey(User, related_name="payments", on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=10, default="FCFA")
+    provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES)
+    payment_method = models.CharField(max_length=50, blank=True)
+    phone = models.CharField(max_length=30, blank=True)
+    reference = models.CharField(max_length=64, unique=True)
+    session_id = models.CharField(max_length=64, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Payment {self.reference} to {self.event.title}"
+
+
+class Review(models.Model):
+    """Review left by a participant after an event finishes."""
+    event = models.ForeignKey(Event, related_name="reviews", on_delete=models.CASCADE)
+    participant = models.ForeignKey(User, related_name="reviews", on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField(default=5)
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = (("event", "participant"),)
+
+    def __str__(self):
+        return f"Review {self.rating} by {self.participant} for {self.event}"

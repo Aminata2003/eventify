@@ -18,7 +18,8 @@ const STATUS_STYLES = {
 const PAGE_SIZE = 5;
 
 export default function ParticipantsList() {
-  const { eventId } = useParams();
+  const rawEventId = useParams().eventId;
+  const eventId = rawEventId && rawEventId !== "undefined" ? (isNaN(Number(rawEventId)) ? rawEventId : Number(rawEventId)) : null;
   const [event, setEvent] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [search, setSearch] = useState("");

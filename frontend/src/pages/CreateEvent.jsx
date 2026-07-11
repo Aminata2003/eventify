@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ImagePlus, MapPin, Map } from "lucide-react";
 import NavbarOrganizer from "../components/NavbarOrganizer";
 import Footer from "../components/Footer";
-import { createEvent } from "../services/eventService";
+import { createEvent, getEventById, updateEvent } from "../services/eventService";
 
 const CATEGORIES = [
   "Musique",
@@ -20,6 +20,11 @@ export default function CreateEvent() {
   const navigate = useNavigate();
 
 
+  const [searchParams] = useSearchParams();
+  const rawEditParam = searchParams.get("edit");
+  // Normaliser la valeur 'undefined' ou chaîne vide en null et garder un id numérique si possible
+  const editEventId = rawEditParam && rawEditParam !== "undefined" ? (isNaN(Number(rawEditParam)) ? rawEditParam : Number(rawEditParam)) : null;
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -31,7 +36,12 @@ export default function CreateEvent() {
     is_public: true,
     allowed_users: [],
     imageFile: null,
+    image: "",
+    price: "0",
+    price_currency: "FCFA",
   });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [loadingEvent, setLoadingEvent] = useState(false);
 
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -59,23 +69,44 @@ export default function CreateEvent() {
   }
 
   function handleImageChange(e) {
-
     const file = e.target.files?.[0];
-
     if (!file) return;
 
-
     handleChange("imageFile", file);
-
-
-    setImagePreview(
-      URL.createObjectURL(file)
-    );
-
+    setImagePreview(URL.createObjectURL(file));
   }
 
+  useEffect(() => {
+    if (!editEventId && editEventId !== 0) return;
 
-
+    setLoadingEvent(true);
+    getEventById(editEventId)
+      .then((event) => {
+        setForm((prev) => ({
+          ...prev,
+          title: event.title || "",
+          description: event.description || "",
+          date: event.date || "",
+          time: event.time || "",
+          category: event.category || "",
+          location: event.location || "",
+          places: event.places?.toString() || "",
+          is_public: event.is_public ?? true,
+          allowed_users: Array.isArray(event.allowed_users) ? event.allowed_users : [],
+          image: event.image || "",
+          price: event.price?.toString() || "0",
+          price_currency: event.price_currency || "FCFA",
+        }));
+        setImagePreview(event.image || null);
+        setIsEditMode(true);
+      })
+      .catch(() => {
+        setError("Impossible de charger l'événement à modifier.");
+      })
+      .finally(() => {
+        setLoadingEvent(false);
+      });
+  }, [editEventId]);
 
   // AJOUT : ajouter un participant privé
   function addPrivateUser() {
@@ -124,10 +155,7 @@ export default function CreateEvent() {
 
 
   async function handleSubmit(e) {
-
     e.preventDefault();
-
-
     setError(null);
 
 
@@ -185,11 +213,16 @@ export default function CreateEvent() {
         location: form.location,
         is_public: form.is_public,
         allowed_users: form.is_public ? [] : form.allowed_users,
+        image: form.imageFile || form.image,
+        price: Number(form.price) || 0,
+        price_currency: form.price_currency || "FCFA",
       };
 
 
 
-      const created = await createEvent(payload);
+      const created = editEventId !== null && editEventId !== undefined
+        ? await updateEvent(editEventId, payload)
+        : await createEvent(payload);
 
 
 
@@ -230,11 +263,9 @@ export default function CreateEvent() {
 
       <main className="mx-auto max-w-2xl px-6 py-10">
 
-
         <h1 className="text-3xl font-bold text-stone-900">
-          Créer un nouvel événement
+          {isEditMode ? "Modifier l'événement" : "Créer un nouvel événement"}
         </h1>
-
 
         <p className="mt-1 text-sm text-stone-500">
           Remplissez les détails ci-dessous pour diffuser votre événement à la
@@ -313,8 +344,36 @@ export default function CreateEvent() {
             </p>
 
           </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-800">
+              Prix de l'événement
+            </label>
 
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                onChange={(e) => handleChange("price", e.target.value)}
+                placeholder="0"
+                className="w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              />
+              <select
+                value={form.price_currency}
+                onChange={(e) => handleChange("price_currency", e.target.value)}
+                className="w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              >
+                <option value="FCFA">FCFA</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
 
+            <p className="mt-1 text-xs text-stone-400">
+              Laissez à 0 pour un événement gratuit.
+            </p>
+          </div>
 
           {/* Image */}
 
@@ -402,20 +461,13 @@ export default function CreateEvent() {
 
 
             <div>
-
               <label className="block text-sm font-medium text-stone-800">
                 Catégorie
               </label>
 
-
               <select
                 value={form.category}
-                onChange={(e) =>
-                  handleChange(
-                    "category",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => handleChange("category", e.target.value)}
                 className="mt-2 w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
               >
 

@@ -1,4 +1,7 @@
+import { useMemo } from "react";
 import { MapPin, Calendar, Clock } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import QRCode from "react-qr-code";
 import { categoryIcons } from "../data/categoryIcons";
 
 // Formatte une date "2026-08-24" en "24 août", sans dépendre d'un champ
@@ -18,7 +21,13 @@ function formatPrice(event) {
 }
 
 function TicketCard({ event }) {
+  const { user } = useAuth();
   const Icon = categoryIcons[event.category];
+  const ticketData = useMemo(() => {
+    const userId = user?.id ?? "guest";
+    const payload = `eventify://ticket?event=${event.id}&user=${userId}&date=${event.date}`;
+    return payload;
+  }, [event.id, event.date, user?.id]);
 
   return (
     <div className="flex bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100">
@@ -59,11 +68,24 @@ function TicketCard({ event }) {
             </span>
           </div>
         </div>
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-          <span className="text-sm font-semibold text-gray-900">{formatPrice(event)}</span>
-          <a href={`/event/${event.id}`} className="text-xs font-medium text-primary hover:underline">
-            Voir le billet
-          </a>
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <div className="text-sm font-semibold text-gray-900">{formatPrice(event)}</div>
+            <a href={`/event/${event.id}`} className="text-xs font-medium text-primary hover:underline">
+              Voir le billet
+            </a>
+          </div>
+          <div className="flex items-center gap-3 rounded-3xl bg-slate-50 p-3">
+            <div className="rounded-xl bg-white p-2 shadow-sm">
+              <QRCode value={ticketData} size={88} />
+            </div>
+            <div className="text-xs text-gray-500">
+              Billet scannable
+              <div className="mt-1 text-[10px] text-stone-400">
+                Présentez ce QR code à l'entrée.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

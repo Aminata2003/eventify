@@ -11,22 +11,60 @@ import {
   mockDashboardStats,
 } from "../data/mockData";
 
-import { api } from "./api";
+import { api, BASE_URL } from "./api";
+import axios from "axios";
 
 const delay = (ms = 400) => new Promise((res) => setTimeout(res, ms));
 
-const USE_API = Boolean(import.meta.env.VITE_API_URL);
+// For development against the real backend, prefer the API by default.
+// Set to `false` only if you explicitly want to use local mock data.
+const USE_API = true;
+
+function ensureValidId(id) {
+  if (id === null || id === undefined) return false;
+  if (typeof id === "string" && (id.trim() === "" || id === "undefined")) return false;
+  return true;
+}
+
+function toFormData(payload) {
+  const formData = new FormData();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === null || value === undefined) {
+      return;
+    }
+
+    if (Array.isArray(value) || (typeof value === "object" && !(value instanceof File))) {
+      formData.append(key, JSON.stringify(value));
+      return;
+    }
+
+    formData.append(key, value);
+  });
+
+  return formData;
+}
 
 
 // ================= EVENTS =================
 
 export async function getEvents(search = "") {
   if (USE_API) {
-    const res = await api.get("/events/", {
-      params: search ? { search } : {},
-    });
-
-    return res.data;
+    try {
+      const res = await api.get("/events/", {
+        params: search ? { search } : {},
+      });
+      return res.data;
+    } catch (err) {
+      if (err.response?.status === 401) {
+        // retry anonymously for public endpoints
+        const res2 = await axios.get(`${BASE_URL}/events/`, {
+          params: search ? { search } : {},
+        });
+        return res2.data;
+      }
+      throw err;
+    }
   }
 
   await delay();
@@ -36,8 +74,17 @@ export async function getEvents(search = "") {
 
 export async function getEventById(id) {
   if (USE_API) {
-    const res = await api.get(`/events/${id}/`);
-    return res.data;
+    if (!ensureValidId(id)) throw new Error("Invalid event id");
+    try {
+      const res = await api.get(`/events/${id}/`);
+      return res.data;
+    } catch (err) {
+      if (err.response?.status === 401) {
+        const res2 = await axios.get(`${BASE_URL}/events/${id}/`);
+        return res2.data;
+      }
+      throw err;
+    }
   }
 
   await delay();
@@ -61,24 +108,8 @@ export async function createEvent(payload) {
   if (USE_API) {
 
     if (payload.image instanceof File) {
-
-      const formData = new FormData();
-
-      Object.entries(payload).forEach(([key,value])=>{
-        formData.append(key,value);
-      });
-
-
-      const res = await api.post(
-        "/events/",
-        formData,
-        {
-          headers:{
-            "Content-Type":"multipart/form-data",
-          },
-        }
-      );
-
+      const formData = toFormData(payload);
+      const res = await api.post("/events/", formData);
       return res.data;
     }
 
@@ -111,7 +142,13 @@ export async function createEvent(payload) {
 
 export async function updateEvent(id,payload){
 
-  if(USE_API){
+  if (USE_API) {
+    if (!ensureValidId(id)) throw new Error("Invalid event id");
+    if (payload.image instanceof File) {
+      const formData = toFormData(payload);
+      const res = await api.patch(`/events/${id}/`, formData);
+      return res.data;
+    }
 
     const res = await api.patch(
       `/events/${id}/`,
@@ -147,6 +184,7 @@ export async function updateEvent(id,payload){
 export async function deleteEvent(id){
 
   if(USE_API){
+    if (!ensureValidId(id)) throw new Error("Invalid event id");
 
     await api.delete(`/events/${id}/`);
 
@@ -176,6 +214,7 @@ export async function deleteEvent(id){
 export async function getParticipants(eventId){
 
   if(USE_API){
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
 
     const res = await api.get(
       `/events/${eventId}/participants/`
@@ -200,6 +239,7 @@ export async function registerToEvent(
 ){
 
   if(USE_API){
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
 
     const res = await api.post(
       `/events/${eventId}/register/`,
@@ -220,6 +260,79 @@ export async function registerToEvent(
 }
 
 
+
+export async function initiatePayment(eventId, payload) {
+  if (USE_API) {
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
+    const res = await api.post("/payments/initiate/", {
+      eventId,
+      ...payload,
+    });
+    return res.data;
+  }
+
+  await delay(500);
+
+  return {
+    sessionId: `session-${eventId}-${Date.now()}`,
+    paymentReference: `REF${Date.now()}`,
+    amount: payload.amount || "0",
+    currency: "FCFA",
+    provider: payload.provider,
+    instructions:
+      payload.provider === "mobile_money"
+        ? `Envoyez ${payload.amount} FCFA au numéro Orange Money 77 123 45 67 ou Wave 78 123 45 67.`
+        : "Cliquez sur Simuler paiement pour terminer la transaction.",
+    expiresIn: 900,
+  };
+}
+
+export async function confirmPayment(sessionId, confirmationCode) {
+  if (USE_API) {
+    const res = await api.post("/payments/confirm/", {
+      sessionId,
+      confirmationCode,
+    });
+    return res.data;
+  }
+
+  await delay(500);
+
+  return {
+    success: true,
+    sessionId,
+    paymentStatus: "completed",
+  };
+}
+
+export async function getEventReviews(eventId) {
+  if (USE_API) {
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
+    const res = await api.get(`/events/${eventId}/reviews/`);
+    return res.data;
+  }
+
+  await delay(400);
+  return [];
+}
+
+export async function postEventReview(eventId, payload) {
+  if (USE_API) {
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
+    const res = await api.post(`/events/${eventId}/reviews/`, payload);
+    return res.data;
+  }
+
+  await delay(400);
+  return {
+    id: Date.now(),
+    participant: 1,
+    participant_name: "Utilisateur",
+    rating: payload.rating,
+    comment: payload.comment,
+    created_at: new Date().toISOString(),
+  };
+}
 
 // ================= DASHBOARD =================
 

@@ -46,31 +46,23 @@ const STATUS_STYLES = {
 
 
 function EventThumbnail({ src, alt }) {
-
   const [failed, setFailed] = useState(false);
 
-
   if (!src || failed) {
-
     return (
       <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-stone-100 text-stone-300">
-
-        <ImageOff size={16}/>
-
+        <ImageOff size={16} />
       </div>
     );
   }
 
-
   return (
-
     <img
       src={src}
       alt={alt}
       onError={() => setFailed(true)}
       className="h-11 w-11 rounded-lg object-cover"
     />
-
   );
 }
 
@@ -1000,7 +992,7 @@ export default function Dashboard() {
 
 
 
-                      </td>                      <td className="px-5 py-3">
+                      </td><td className="px-5 py-3">
 
 
                         <div className="flex gap-1">
