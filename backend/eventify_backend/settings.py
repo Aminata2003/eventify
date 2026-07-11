@@ -155,8 +155,19 @@ MEDIA_ROOT = BASE_DIR / "media"
 # En local : liste en dur. En prod : ajoutée via la variable d'env
 # CORS_ALLOWED_ORIGINS (ex: "https://eventify-xxxx.vercel.app").
 CORS_ALLOWED_ORIGINS = [
-    "https://eventify-git-main-aminata2003s-projects.vercel.app"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
 ] + [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
+
+# Vercel crée une nouvelle URL "preview" à chaque déploiement
+# (ex: eventify-odmt2b4ll-aminata2003s-projects.vercel.app), en plus de
+# l'URL de production stable. Cette regex autorise automatiquement
+# TOUTES les URLs Vercel de ton projet, sans avoir à les ajouter une par une.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://eventify.*\.vercel\.app$",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
