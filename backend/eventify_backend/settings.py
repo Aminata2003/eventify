@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # sert les fichiers statiques en prod
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -65,7 +67,18 @@ if USE_SQLITE:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+elif os.getenv("DATABASE_URL"):
+    # Render fournit une seule variable DATABASE_URL pour sa base PostgreSQL
+    # managée — on l'utilise en priorité si elle est présente.
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
+            conn_max_age=600,
+            ssl_require=not DEBUG,
+        )
+    }
 else:
+    # Fallback : configuration locale par variables séparées (dev sur ta machine)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -90,6 +103,13 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"  # requis pour collectstatic sur Render
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "events.User"
@@ -132,11 +152,22 @@ if not EMAIL_BACKEND:
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# En local : liste en dur. En prod : ajoutée via la variable d'env
+# CORS_ALLOWED_ORIGINS (ex: "https://eventify-xxxx.vercel.app").
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5175",
     "http://127.0.0.1:5175",
-]
+] + [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Nécessaire pour que Django accepte les requêtes POST (admin, etc.)
+# venant du domaine du backend lui-même une fois déployé sur Render.
+CSRF_TRUSTED_ORIGINS = [
+    origin for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
+]
+
+# Render place le service derrière un proxy HTTPS.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
