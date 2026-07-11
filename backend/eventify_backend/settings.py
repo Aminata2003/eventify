@@ -155,10 +155,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # En local : liste en dur. En prod : ajoutée via la variable d'env
 # CORS_ALLOWED_ORIGINS (ex: "https://eventify-xxxx.vercel.app").
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5175",
-    "http://127.0.0.1:5175",
+    "https://eventify-git-main-aminata2003s-projects.vercel.app"
 ] + [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
 
 CORS_ALLOW_CREDENTIALS = True
