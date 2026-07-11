@@ -43,6 +43,11 @@ function EventRegister() {
     phone: "",
   });
 
+  // Bug H corrigé : rediriger vers login si non connecté
+  useEffect(() => {
+    if (!user) navigate("/login", { replace: true, state: { from: `/event/${id}/register` } });
+  }, [user, navigate, id]);
+
   useEffect(() => {
     let active = true;
     getEventById(id)
@@ -63,7 +68,8 @@ function EventRegister() {
     };
   }, [id]);
 
-  const isPaid = event?.price && String(event.price).toLowerCase() !== "gratuit";
+  // Bug C corrigé : vérification fiable du prix (Number() gère '0', '0.00', null)
+  const isPaid = event?.price != null && Number(event.price) > 0;
 
   const handleChange = (e) => {
     const { name, value } = e.target;

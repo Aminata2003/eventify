@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Download, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -8,6 +8,7 @@ import {
   getParticipants,
   exportParticipantsCSV,
 } from "../services/eventService";
+import { useAuth } from "../context/AuthContext";
 
 const STATUS_STYLES = {
   confirmed: { label: "Confirmé", className: "bg-green-100 text-green-700" },
@@ -20,6 +21,8 @@ const PAGE_SIZE = 5;
 export default function ParticipantsList() {
   const rawEventId = useParams().eventId;
   const eventId = rawEventId && rawEventId !== "undefined" ? (isNaN(Number(rawEventId)) ? rawEventId : Number(rawEventId)) : null;
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [search, setSearch] = useState("");
@@ -30,6 +33,11 @@ export default function ParticipantsList() {
     setLoading(true);
     Promise.all([getEventById(eventId), getParticipants(eventId)])
       .then(([eventData, participantsData]) => {
+        // Faille 3 : rediriger si l'événement n'appartient pas à l'organisateur connecté
+        if (user && eventData.organizer?.id !== user.id) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
         setEvent(eventData);
         setParticipants(participantsData);
       })
@@ -172,11 +180,9 @@ export default function ParticipantsList() {
           Date d'inscription
         </th>
 
-        {!event?.is_public && (
-          <th className="px-5 py-3 font-medium">
-            Statut
-          </th>
-        )}
+        <th className="px-5 py-3 font-medium">
+          Statut
+        </th>
       </tr>
     </thead>
 
@@ -215,24 +221,16 @@ export default function ParticipantsList() {
 
 
 
-          {!event?.is_public && (
-
-            <td className="px-5 py-3">
-
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                  STATUS_STYLES[p.status]?.className ??
-                  "bg-stone-100 text-stone-600"
-                }`}
-              >
-
-                {STATUS_STYLES[p.status]?.label ?? p.status}
-
-              </span>
-
-            </td>
-
-          )}
+          <td className="px-5 py-3">
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                STATUS_STYLES[p.status]?.className ??
+                "bg-stone-100 text-stone-600"
+              }`}
+            >
+              {STATUS_STYLES[p.status]?.label ?? p.status}
+            </span>
+          </td>
 
 
         </tr>
@@ -246,7 +244,7 @@ export default function ParticipantsList() {
         <tr>
 
           <td
-            colSpan={!event?.is_public ? 4 : 3}
+            colSpan={4}
             className="px-5 py-8 text-center text-stone-400"
           >
 

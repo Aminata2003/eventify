@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { User, Mail, Lock, Check, X } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
@@ -32,6 +32,7 @@ function getPasswordChecks(password) {
 
 function RegisterParticipant() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -81,7 +82,8 @@ function RegisterParticipant() {
         password: formData.password,
         role: "participant",
       });
-      navigate("/events", { replace: true });
+      const from = location.state?.from;
+      navigate(from || "/events", { replace: true });
     } catch (err) {
       setError(getServerError(err));
     } finally {

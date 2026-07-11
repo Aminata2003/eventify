@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -28,7 +29,10 @@ function Login() {
 
     try {
       const user = await login(formData.email, formData.password);
-      if (user?.role === "organizer") {
+      const from = location.state?.from;
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (user?.role === "organizer") {
         navigate("/dashboard", { replace: true });
       } else {
         navigate("/events", { replace: true });

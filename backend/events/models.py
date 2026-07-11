@@ -8,6 +8,7 @@ class User(AbstractUser):
         ("participant", "Participant"),
         ("organizer", "Organisateur"),
     )
+    email = models.EmailField(_("email address"), unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="participant")
     phone = models.CharField(max_length=20, blank=True)
     organization_name = models.CharField(max_length=255, blank=True)
@@ -19,7 +20,7 @@ class User(AbstractUser):
 class Event(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    category = models.CharField(max_length=100, blank=True)
+    category = models.CharField(max_length=100, blank=False)
     date = models.DateField()
     time = models.TimeField(blank=True, null=True)
     location = models.CharField(max_length=255)

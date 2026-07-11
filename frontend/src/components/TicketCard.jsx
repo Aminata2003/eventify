@@ -20,7 +20,7 @@ function formatPrice(event) {
   return `${Number(event.price).toLocaleString("fr-FR")} ${event.price_currency ?? "FCFA"}`;
 }
 
-function TicketCard({ event }) {
+function TicketCard({ event, onCancel, onConfirmWaitlist, isUpcoming }) {
   const { user } = useAuth();
   const Icon = categoryIcons[event.category];
   const ticketData = useMemo(() => {
@@ -49,9 +49,19 @@ function TicketCard({ event }) {
               {Icon && <Icon size={12} />}
               {event.category}
             </span>
-            <span className="text-[10px] uppercase tracking-wide bg-green-50 text-green-700 font-semibold px-2 py-0.5 rounded-full">
-              Confirmé
-            </span>
+            {event.user_registration_status === "waitlist" ? (
+              <span className="text-[10px] uppercase tracking-wide bg-yellow-100 text-yellow-700 font-semibold px-2.5 py-0.5 rounded-full">
+                Liste d'attente
+              </span>
+            ) : event.user_registration_status === "pending" ? (
+              <span className="text-[10px] uppercase tracking-wide bg-stone-100 text-stone-600 font-semibold px-2.5 py-0.5 rounded-full">
+                En attente
+              </span>
+            ) : (
+              <span className="text-[10px] uppercase tracking-wide bg-green-100 text-green-700 font-semibold px-2.5 py-0.5 rounded-full">
+                Confirmé
+              </span>
+            )}
           </div>
           <h3 className="font-semibold text-gray-900 mt-1.5 leading-snug truncate">
             {event.title}
@@ -71,9 +81,32 @@ function TicketCard({ event }) {
         <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <div className="text-sm font-semibold text-gray-900">{formatPrice(event)}</div>
-            <a href={`/event/${event.id}`} className="text-xs font-medium text-primary hover:underline">
-              Voir le billet
-            </a>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-1">
+              <a href={`/event/${event.id}`} className="text-xs font-medium text-primary hover:underline">
+                Voir le billet
+              </a>
+              {/* Bug #5 corrigé : boutons d'action uniquement sur les événements à venir */}
+              {isUpcoming && event.user_registration_status === "waitlist" && (event.confirmed_count < event.places) && (
+                <button
+                  onClick={() => onConfirmWaitlist(event.user_registration_id, event.price, event.id)}
+                  className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                >
+                  Confirmer ma place
+                </button>
+              )}
+              {isUpcoming && (
+                <button
+                  onClick={() => {
+                    if (window.confirm("Êtes-vous sûr de vouloir annuler votre inscription à cet événement ?")) {
+                      onCancel(event.id);
+                    }
+                  }}
+                  className="text-xs font-medium text-red-500 hover:text-red-700 hover:underline"
+                >
+                  Annuler l'inscription
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3 rounded-3xl bg-slate-50 p-3">
             <div className="rounded-xl bg-white p-2 shadow-sm">

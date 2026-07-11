@@ -4,6 +4,7 @@ import { ImagePlus, MapPin, Map } from "lucide-react";
 import NavbarOrganizer from "../components/NavbarOrganizer";
 import Footer from "../components/Footer";
 import { createEvent, getEventById, updateEvent } from "../services/eventService";
+import { useAuth } from "../context/AuthContext";
 
 const CATEGORIES = [
   "Musique",
@@ -18,6 +19,7 @@ const CATEGORIES = [
 export default function CreateEvent() {
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
 
   const [searchParams] = useSearchParams();
@@ -39,6 +41,7 @@ export default function CreateEvent() {
     image: "",
     price: "0",
     price_currency: "FCFA",
+    status: "published",
   });
   const [isEditMode, setIsEditMode] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(false);
@@ -82,6 +85,11 @@ export default function CreateEvent() {
     setLoadingEvent(true);
     getEventById(editEventId)
       .then((event) => {
+        // Faille 4 : vérifier que l'événement appartient bien à l'organisateur connecté
+        if (user && event.organizer?.id !== user.id) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
         setForm((prev) => ({
           ...prev,
           title: event.title || "",
@@ -96,6 +104,7 @@ export default function CreateEvent() {
           image: event.image || "",
           price: event.price?.toString() || "0",
           price_currency: event.price_currency || "FCFA",
+          status: event.status || "published",
         }));
         setImagePreview(event.image || null);
         setIsEditMode(true);
@@ -216,6 +225,7 @@ export default function CreateEvent() {
         image: form.imageFile || form.image,
         price: Number(form.price) || 0,
         price_currency: form.price_currency || "FCFA",
+        status: form.status,
       };
 
 
@@ -233,9 +243,10 @@ export default function CreateEvent() {
     } catch (err) {
 
 
-      setError(
-        "Une erreur est survenue, réessaie dans un instant."
-      );
+      const msg = err.response?.data?.detail ||
+                  (err.response?.data ? Object.entries(err.response.data).map(([k,v]) => `${k}: ${v}`).join(' | ') : null) ||
+                  "Une erreur est survenue, réessaie dans un instant.";
+      setError(msg);
 
 
     } finally {
@@ -695,6 +706,27 @@ export default function CreateEvent() {
 
 
           </div>
+
+          {isEditMode && (
+            <div className="rounded-xl border border-stone-200 bg-white px-5 py-5">
+              <label htmlFor="event-lifecycle-status" className="block text-sm font-medium text-stone-800">
+                État de l'activité
+              </label>
+              <p className="text-xs text-stone-400 mt-1">
+                Annuler l'activité bloquera automatiquement les nouvelles inscriptions et une notification sera envoyée aux participants inscrits.
+              </p>
+              <select
+                id="event-lifecycle-status"
+                value={form.status}
+                onChange={(e) => handleChange("status", e.target.value)}
+                className="mt-3 w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+              >
+                <option value="published">Publié</option>
+                <option value="draft">Brouillon</option>
+                <option value="cancelled">Annulé</option>
+              </select>
+            </div>
+          )}
 
 
 

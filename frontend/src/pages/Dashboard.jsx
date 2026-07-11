@@ -21,7 +21,7 @@ import StatCard from "../components/StatCard";
 
 import {
   getDashboardStats,
-  getEvents,
+  getMyEvents,
   deleteEvent,
 } from "../services/eventService";
 
@@ -37,9 +37,14 @@ const STATUS_STYLES = {
     className: "bg-stone-200 text-stone-700",
   },
 
+  cancelled: {
+    label: "Annulé",
+    className: "bg-red-100 text-red-700",
+  },
+
   complet: {
     label: "Complet",
-    className: "bg-red-100 text-red-700",
+    className: "bg-orange-100 text-orange-700",
   },
 };
 
@@ -205,7 +210,7 @@ export default function Dashboard() {
 
         getDashboardStats(),
 
-        getEvents()
+        getMyEvents()
 
       ]);
 

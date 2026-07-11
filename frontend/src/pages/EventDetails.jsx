@@ -74,8 +74,11 @@ export default function EventDetails() {
     );
   }
 
-  const spotsLeft = event.capacity - event.registrations_count;
-  const eventPassed = event.date ? new Date(event.date) <= new Date() : false;
+  // Bug A corrigé : confirmed_count pour les places réelles occupées (exclut waitlist/pending)
+  const spotsLeft = (event.places ?? event.capacity) - (event.confirmed_count ?? 0);
+  const eventPassed = event.date ? new Date(`${event.date}T23:59:59`) < new Date() : false;
+  const isCancelled = event.status === "cancelled";
+  const registrationBlocked = eventPassed || isCancelled;
   const averageRating = reviews.length
     ? reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length
     : 0;
@@ -108,17 +111,35 @@ export default function EventDetails() {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-        <div className="absolute bottom-6 left-0 w-full px-6">
-          <div className="mx-auto max-w-4xl">
-            <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-stone-800">
-              {event.category}
-            </span>
+          <div className="absolute bottom-6 left-0 w-full px-6">
+            <div className="mx-auto max-w-4xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-stone-800">
+                  {event.category}
+                </span>
+                {/* Bug G : badge statut visible */}
+                {isCancelled && (
+                  <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white uppercase tracking-wide">
+                    ❌ Annulé
+                  </span>
+                )}
+                {!isCancelled && spotsLeft <= 0 && (
+                  <span className="rounded-full bg-stone-800/80 px-3 py-1 text-xs font-bold text-white uppercase tracking-wide">
+                    Complet
+                  </span>
+                )}
+                {event.status === "draft" && (
+                  <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-stone-800 uppercase tracking-wide">
+                    Brouillon
+                  </span>
+                )}
+              </div>
 
-            <h1 className="mt-3 max-w-2xl text-2xl font-bold text-white sm:text-3xl">
-              {event.title}
-            </h1>
+              <h1 className="mt-3 max-w-2xl text-2xl font-bold text-white sm:text-3xl">
+                {event.title}
+              </h1>
+            </div>
           </div>
-        </div>
       </div>
 
 
@@ -247,10 +268,17 @@ export default function EventDetails() {
 
             <button
               onClick={() => navigate(`/event/${event.id}/register`)}
-              disabled={spotsLeft <= 0}
-              className="mt-4 w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60"
+              disabled={registrationBlocked || spotsLeft <= 0}
+              className="mt-4 w-full rounded-lg bg-[#f6682f] py-2.5 text-sm font-medium text-white hover:bg-[#ea580c] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {spotsLeft <= 0 ? "Complet" : "S'inscrire"}
+              {/* Bug B corrigé : label clair selon l'état */}
+              {isCancelled
+                ? "Événement annulé"
+                : eventPassed
+                ? "Événement terminé"
+                : spotsLeft <= 0
+                ? "Complet — Liste d'attente"
+                : "S'inscrire"}
             </button>
 
           </div>

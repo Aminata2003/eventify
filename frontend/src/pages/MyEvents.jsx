@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { CalendarX, Ticket } from "lucide-react";
 import Navbar from "../components/Navbar";
 import TicketCard from "../components/TicketCard";
-import { getMyEvents } from "../services/eventService";
+import { getMyEvents, cancelRegistration, confirmWaitlistRegistration } from "../services/eventService";
 import { useAuth } from "../context/AuthContext";
 
 function MyEvents() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("upcoming");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,31 @@ function MyEvents() {
   if (user.role === "organizer") {
     return <Navigate to="/dashboard" replace />;
   }
+
+  const handleCancel = async (eventId) => {
+    try {
+      await cancelRegistration(eventId);
+      const data = await getMyEvents();
+      setEvents(data);
+    } catch (err) {
+      alert("Erreur lors de l'annulation de l'inscription.");
+    }
+  };
+
+  const handleConfirmWaitlist = async (registrationId, price, eventId) => {
+    if (price && Number(price) > 0) {
+      navigate(`/event/${eventId}/register`);
+      return;
+    }
+    try {
+      await confirmWaitlistRegistration(registrationId);
+      const data = await getMyEvents();
+      setEvents(data);
+      alert("Votre place a été confirmée avec succès !");
+    } catch (err) {
+      alert(err.response?.data?.detail || "Erreur lors de la confirmation de la place.");
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -77,7 +103,13 @@ function MyEvents() {
         ) : myEvents.length > 0 ? (
           <div className="flex flex-col gap-4 mt-10">
             {myEvents.map((event) => (
-              <TicketCard key={event.id} event={event} />
+              <TicketCard
+                key={event.id}
+                event={event}
+                isUpcoming={activeTab === "upcoming"}
+                onCancel={handleCancel}
+                onConfirmWaitlist={handleConfirmWaitlist}
+              />
             ))}
           </div>
         ) : (

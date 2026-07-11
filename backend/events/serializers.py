@@ -45,6 +45,8 @@ class EventSerializer(serializers.ModelSerializer):
     confirmed_count = serializers.SerializerMethodField()
     pending_count = serializers.SerializerMethodField()
     waitlist_count = serializers.SerializerMethodField()
+    user_registration_status = serializers.SerializerMethodField()
+    user_registration_id = serializers.SerializerMethodField()
 
 
     class Meta:
@@ -72,6 +74,8 @@ class EventSerializer(serializers.ModelSerializer):
             "confirmed_count",
             "pending_count",
             "waitlist_count",
+            "user_registration_status",
+            "user_registration_id",
             "status",
             "created_at",
             "updated_at",
@@ -107,10 +111,38 @@ class EventSerializer(serializers.ModelSerializer):
             status="waitlist"
         ).count()
 
+    def get_user_registration_status(self, obj):
+        request = self.context.get("request")
+        if request and request.user and not request.user.is_anonymous:
+            reg = obj.registrations.filter(participant=request.user).first()
+            if reg:
+                return reg.status
+        return None
+
+    def get_user_registration_id(self, obj):
+        request = self.context.get("request")
+        if request and request.user and not request.user.is_anonymous:
+            reg = obj.registrations.filter(participant=request.user).first()
+            if reg:
+                return reg.id
+        return None
+
 
 class EventCreateSerializer(serializers.ModelSerializer):
-    capacity = serializers.IntegerField(required=False, write_only=True)
+    capacity = serializers.IntegerField(required=False, write_only=True, min_value=1)
+    places = serializers.IntegerField(required=True, min_value=1)
+    category = serializers.CharField(required=True, allow_blank=False)
+    title = serializers.CharField(required=True, allow_blank=False)
+    date = serializers.DateField(required=True)
+    location = serializers.CharField(required=True, allow_blank=False)
     image = ImageOrURLField(required=False, allow_null=True)
+
+    # Bug F corrigé : status accepté explicitement avec les seules valeurs métier autorisées
+    status = serializers.ChoiceField(
+        choices=["published", "draft", "cancelled"],
+        required=False,
+        default="published"
+    )
 
     class Meta:
         model = Event
@@ -129,7 +161,41 @@ class EventCreateSerializer(serializers.ModelSerializer):
             "capacity",
             "price",
             "price_currency",
+            "status",
         ]
+
+    def validate_date(self, value):
+        from django.utils import timezone
+        if not self.instance and value <= timezone.now().date():
+            raise serializers.ValidationError("La date de début d'une activité doit être supérieure à la date actuelle lors de sa création.")
+        return value
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        if request and request.user and not request.user.is_anonymous:
+            title = attrs.get("title")
+            event_date = attrs.get("date")
+            location = attrs.get("location")
+
+            if self.instance:
+                if title is None:
+                    title = self.instance.title
+                if event_date is None:
+                    event_date = self.instance.date
+                if location is None:
+                    location = self.instance.location
+
+            qs = Event.objects.filter(
+                title=title,
+                date=event_date,
+                location=location,
+                organizer=request.user
+            )
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError("Un organisateur ne peut pas créer deux activités identiques ayant le même titre, la même date et le même lieu.")
+        return attrs
 
     def _save_uploaded_image(self, image, request):
         if not image or not hasattr(image, "read"):
@@ -166,14 +232,15 @@ class EventCreateSerializer(serializers.ModelSerializer):
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="participant.id", read_only=True)
+    # Bug J corrigé : id est maintenant l'id de la Registration (pas du participant)
+    participant_id = serializers.IntegerField(source="participant.id", read_only=True)
     name = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
     registered_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Registration
-        fields = ["id", "name", "email", "registered_at", "status"]
+        fields = ["id", "participant_id", "name", "email", "registered_at", "status"]
 
     def get_name(self, obj):
         return obj.participant.get_full_name() or obj.participant.username or obj.participant.email or ""

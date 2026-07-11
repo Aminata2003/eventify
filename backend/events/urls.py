@@ -16,6 +16,7 @@ urlpatterns = [
     path("auth/register/", UserRegisterView.as_view(), name="user-register"),
     path("auth/register/organizer/", OrganizerRegisterView.as_view(), name="organizer-register"),
     path("events/<int:event_id>/register/", RegistrationViewSet.as_view({"post": "register"}), name="event-register"),
+    path("events/<int:event_id>/cancel/", RegistrationViewSet.as_view({"delete": "cancel_registration"}), name="event-cancel"),
     path("events/my-events/", EventViewSet.as_view({"get": "my_events"}), name="my-events"),
     path("events/<int:event_id>/reviews/", ReviewViewSet.as_view({"get": "list", "post": "create"}), name="event-reviews"),
     path("payments/initiate/", PaymentViewSet.as_view({"post": "initiate"}), name="payment-initiate"),

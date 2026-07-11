@@ -259,6 +259,26 @@ export async function registerToEvent(
   };
 }
 
+export async function cancelRegistration(eventId) {
+  if (USE_API) {
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
+    const res = await api.delete(`/events/${eventId}/cancel/`);
+    return res.data;
+  }
+  await delay(500);
+  return { success: true };
+}
+
+export async function confirmWaitlistRegistration(registrationId) {
+  if (USE_API) {
+    if (!ensureValidId(registrationId)) throw new Error("Invalid registration id");
+    const res = await api.post(`/registrations/${registrationId}/confirm_waitlist/`);
+    return res.data;
+  }
+  await delay(500);
+  return { success: true };
+}
+
 
 
 export async function initiatePayment(eventId, payload) {
@@ -408,12 +428,10 @@ export async function getMyEvents(){
 // Liste des utilisateurs inscrits sur la plateforme
 // Utilisé pour choisir les invités d'un événement privé
 
-export async function getUsers(){
-
-  if(USE_API){
-
-    const res = await api.get("/users/");
-
+export async function getUsers(query = "") {
+  if (USE_API) {
+    // Bug getUsers corrigé : utilise /users/search/?q= au lieu de /users/ (qui est protégé)
+    const res = await api.get("/users/search/", { params: query ? { q: query } : {} });
     return res.data;
   }
 

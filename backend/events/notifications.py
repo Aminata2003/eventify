@@ -115,3 +115,100 @@ def send_event_organizer_reminder(event, registrations):
         [event.organizer.email],
         fail_silently=True,
     )
+
+
+def send_cancellation_notification_to_organizer(event, participant):
+    if not event.organizer.email:
+        return
+    subject = f"Annulation d'inscription — {event.title}"
+    date_text, time_text = _format_event_datetime(event)
+    message = (
+        f"Bonjour {event.organizer.get_full_name() or event.organizer.username},\n\n"
+        f"Le participant {participant.get_full_name() or participant.username} ({participant.email}) "
+        f"a annulé son inscription à votre événement '{event.title}'.\n"
+        f"Date de l'événement : {date_text} à {time_text}\n\n"
+        f"Merci,\nEventify"
+    )
+    _send_email(subject, message, [event.organizer.email])
+
+
+def send_event_cancelled_notification(event, participants):
+    subject = f"IMPORTANT : Annulation de l'événement — {event.title}"
+    date_text, time_text = _format_event_datetime(event)
+    for participant in participants:
+        if not participant.email:
+            continue
+        message = (
+            f"Bonjour {participant.get_full_name() or participant.username},\n\n"
+            f"Nous vous informons que l'événement '{event.title}', prévu le {date_text} à {time_text}, "
+            f"a été annulé par l'organisateur.\n\n"
+            f"Nous nous excusons pour le désagrément.\nEventify"
+        )
+        _send_email(subject, message, [participant.email])
+
+
+def send_event_modified_notification(event, participants, changes_desc):
+    subject = f"Mise à jour de l'événement — {event.title}"
+    date_text, time_text = _format_event_datetime(event)
+    for participant in participants:
+        if not participant.email:
+            continue
+        message = (
+            f"Bonjour {participant.get_full_name() or participant.username},\n\n"
+            f"Des modifications importantes ont été apportées à l'événement '{event.title}' auquel vous êtes inscrit(e) :\n"
+            f"{changes_desc}\n\n"
+            f"Nouvelles informations :\n"
+            f"Date : {date_text} à {time_text}\n"
+            f"Lieu : {event.location}\n"
+            f"Lieu exact : {event.venue or 'Non spécifié'}\n\n"
+            f"Merci de votre confiance,\nEventify"
+        )
+        _send_email(subject, message, [participant.email])
+
+
+def send_waitlist_notification(event, participant):
+    if not participant.email:
+        return
+    subject = f"Inscription sur liste d'attente — {event.title}"
+    date_text, time_text = _format_event_datetime(event)
+    message = (
+        f"Bonjour {participant.get_full_name() or participant.username},\n\n"
+        f"L'événement '{event.title}' est actuellement complet. "
+        f"Vous avez été ajouté(e) à la liste d'attente.\n"
+        f"Nous vous préviendrons par e-mail dès qu'une place se libèrera afin que vous puissiez confirmer votre inscription.\n\n"
+        f"Merci,\nEventify"
+    )
+    _send_email(subject, message, [participant.email])
+
+
+def send_waitlist_available_notification(event, participant):
+    if not participant.email:
+        return
+    subject = f"Une place s'est libérée ! — {event.title}"
+    date_text, time_text = _format_event_datetime(event)
+    message = (
+        f"Bonjour {participant.get_full_name() or participant.username},\n\n"
+        f"Bonne nouvelle ! Une place s'est libérée pour l'événement '{event.title}' (prévu le {date_text} à {time_text}).\n"
+        f"Vous étiez en tête de la liste d'attente. Vous pouvez dès maintenant confirmer votre inscription "
+        f"depuis votre espace personnel sur Eventify.\n\n"
+        f"Veuillez noter que si l'événement est payant, la confirmation nécessitera le règlement des frais de participation.\n\n"
+        f"À très bientôt,\nEventify"
+    )
+    _send_email(subject, message, [participant.email])
+
+
+def send_participant_cancellation_confirmation(event, participant):
+    """Bug #4 : Confirmation d'annulation envoyée au participant lui-même."""
+    if not participant.email:
+        return
+    subject = f"Annulation de votre inscription — {event.title}"
+    date_text, time_text = _format_event_datetime(event)
+    message = (
+        f"Bonjour {participant.get_full_name() or participant.username},\n\n"
+        f"Votre inscription à l'événement '{event.title}' (prévu le {date_text} à {time_text}) "
+        f"a bien été annulée.\n\n"
+        f"Si vous souhaitez vous réinscrire ultérieurement, rendez-vous sur Eventify.\n\n"
+        f"Cordialement,\nEventify"
+    )
+    _send_email(subject, message, [participant.email])
+
