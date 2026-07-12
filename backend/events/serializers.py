@@ -147,6 +147,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = [
+             "id",
             "title",
             "description",
             "category",
