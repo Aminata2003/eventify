@@ -237,9 +237,11 @@ export default function CreateEvent() {
 
 
       const eventId = created.id || created.event?.id;
+      console.log("Réponse création :", created);
+      console.log("ID récupéré :", eventId);
 
 if (eventId) {
-  navigate(`/event/${eventId}`);
+  navigate(`/events/${eventId}`);
 } else {
   console.error("ID événement introuvable :", created);
   setError("Événement créé mais impossible de récupérer son identifiant.");
