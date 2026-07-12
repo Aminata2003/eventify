@@ -18,7 +18,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "cloudinary_storage",
     "django.contrib.staticfiles",
+    "cloudinary",
     "rest_framework",
     "corsheaders",
     "drf_yasg",
@@ -106,11 +108,22 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"  # requis pour collectstatic sur Render
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+}
+
+# Identifiants Cloudinary — stockage permanent des images uploadées.
+# Le disque local de Render est éphémère (effacé à chaque redémarrage du
+# service), donc les images uploadées via FileSystemStorage disparaissaient
+# après chaque redéploiement/mise en veille. Cloudinary héberge les images
+# de façon permanente, indépendamment du cycle de vie du service Render.
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
