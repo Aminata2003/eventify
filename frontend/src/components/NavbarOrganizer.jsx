@@ -8,7 +8,6 @@ export default function NavbarOrganizer({ active = "" }) {
 
   const links = [
     { key: "dashboard", label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-    { key: "tracking", label: "Suivi événement", to: "/dashboard/1/participants", icon: ClipboardList },
   ];
 
   function handleLogout() {
