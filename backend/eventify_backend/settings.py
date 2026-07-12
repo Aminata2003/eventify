@@ -17,9 +17,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "cloudinary_storage",
     "django.contrib.staticfiles",
     "cloudinary",
+    "cloudinary_storage",
     "rest_framework",
     "corsheaders",
     "drf_yasg",
@@ -92,6 +92,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_STORAGE = "cloudinary_storage.storage.StaticCloudinaryStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     "default": {
