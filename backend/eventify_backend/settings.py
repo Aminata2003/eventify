@@ -87,7 +87,6 @@ else:
             "PASSWORD": os.getenv("DB_PASSWORD", "bissouma8"),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
-            "DISABLE_SERVER_SIDE_CURSORS": True,
         }
     }
 
@@ -106,6 +105,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"  # requis pour collectstatic sur Render
 STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
@@ -156,7 +158,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 # En local : liste en dur. En prod : ajoutée via la variable d'env
 # CORS_ALLOWED_ORIGINS (ex: "https://eventify-xxxx.vercel.app").
 CORS_ALLOWED_ORIGINS = [
-    "https://eventify-three-mu.vercel.app"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
 ] + [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
 
 # Vercel crée une nouvelle URL "preview" à chaque déploiement
