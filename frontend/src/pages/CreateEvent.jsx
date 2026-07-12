@@ -241,7 +241,7 @@ export default function CreateEvent() {
       console.log("ID récupéré :", eventId);
 
 if (eventId) {
-  navigate(`/events/${eventId}`);
+  navigate(`/event/${eventId}`, { replace: true });
 } else {
   console.error("ID événement introuvable :", created);
   setError("Événement créé mais impossible de récupérer son identifiant.");
