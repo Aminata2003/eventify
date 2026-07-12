@@ -1,0 +1,731 @@
+[
+  {
+    "model": "events.user",
+    "pk": 1,
+    "fields": {
+      "password": "changeme",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "organizer",
+      "first_name": "Eventify",
+      "last_name": "Sénégal",
+      "email": "organizer@eventify.dev",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-07-08T17:17:00.635422+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "Eventify Sénégal"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 2,
+    "fields": {
+      "password": "changeme",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "aminata.diop",
+      "first_name": "Aminata",
+      "last_name": "Diop",
+      "email": "aminata.diop@exemple.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T17:17:00.635422+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 3,
+    "fields": {
+      "password": "changeme",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "moussa.fall",
+      "first_name": "Moussa",
+      "last_name": "Fall",
+      "email": "moussa.fall@exemple.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T17:17:00.635422+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 4,
+    "fields": {
+      "password": "changeme",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "fatou.ndiaye",
+      "first_name": "Fatou",
+      "last_name": "Ndiaye",
+      "email": "fatou.ndiaye@exemple.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T17:17:00.635422+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 5,
+    "fields": {
+      "password": "changeme",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ibrahima.sarr",
+      "first_name": "Ibrahima",
+      "last_name": "Sarr",
+      "email": "ibrahima.sarr@exemple.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T17:17:00.635422+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 6,
+    "fields": {
+      "password": "changeme",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "marieme.ba",
+      "first_name": "Marième",
+      "last_name": "Ba",
+      "email": "marieme.ba@exemple.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T17:17:00.635422+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 7,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "aminata.sow",
+      "first_name": "Aminata",
+      "last_name": "Sow",
+      "email": "aminata.sow@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T18:09:18.033001+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 8,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test.user@example.com",
+      "first_name": "Test",
+      "last_name": "User",
+      "email": "test.user@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T18:38:43.807124+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 9,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$Hg7gKIKiyxNJuduiMup5V7$WBJ5fnNIeNnW17NTIB0gdKB2MVmIiriqKaZNNhFDMM8=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "lamine@gmail.com",
+      "first_name": "lamine",
+      "last_name": "",
+      "email": "lamine@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T20:13:06.286839+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "lamine"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 10,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$UxLQ6nfaX9AQLqSYChM7bJ$HdB0bkuA2cn7M8TCFFBPmJMDqjDk5CBWt3aXqbkzSIE=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "testuser@example.com",
+      "first_name": "Test",
+      "last_name": "User",
+      "email": "testuser@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T20:50:29.144113+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 11,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$gKdR557d8oJVqK593armq2$/Lw5uK0HClqW2IJ693LgfEzPeZdbGqDJUZFNTy/Z+Yo=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test@gmail.com",
+      "first_name": "test",
+      "last_name": "",
+      "email": "test@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T20:52:15.390576+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "test"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 12,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$HTW80GNkmy1JLuQ5vzzWXf$5WuRxQmUXrY0BXCDF7gQQX2rpFE1wgihEORqDafdcdQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "fanta@gmail.com",
+      "first_name": "fanta",
+      "last_name": "",
+      "email": "fanta@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T21:07:18.423528+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 13,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$SBqqLc6xclVS6oNLdpnVYl$3Yzck/4QYFdlZ3eQGeI13vwntBXajQZrhq1BMD/0krQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test.organizer@example.com",
+      "first_name": "Test",
+      "last_name": "Organizer",
+      "email": "test.organizer@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T21:08:48.537735+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "Test Organizer"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 14,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ytiN6oZPfehTOD0hRKd9AP$W4PMTB7xr66yaxFx7JfQECAfTDou3mML/NIHGYlRxl8=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "fatou@gmail.com",
+      "first_name": "fanta",
+      "last_name": "",
+      "email": "fatou@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T21:17:44.340081+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 15,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ST4mmIZBIjv20u8z4ualwQ$vumgs3C6QyXAUKZLT2JHf7QPpEJC460Rrg1wcXhnpfQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "amina@gmail.com",
+      "first_name": "aminata",
+      "last_name": "",
+      "email": "amina@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T21:22:42.512435+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "aminata"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 16,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$9Se6FsJiLU7jysByUCAIiC$7aepgvxZP4VTUEf/aeE/1j9KcyIoZlPNfT2KVPq/7hw=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "lamane-holding@gmail.org",
+      "first_name": "Lamane",
+      "last_name": "holding",
+      "email": "lamane-holding@gmail.org",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-08T21:50:07.630756+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "Lamane holding"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 17,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$o8UYNKHxbVdY5QPb0fG4BW$LJoZmaWRs814lFyKlQkE3vSiRKiQ+HCirpafNzREDs4=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ndeye@gmail.com",
+      "first_name": "ndeye",
+      "last_name": "",
+      "email": "ndeye@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T09:52:15.484940+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 18,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$oEDlSJ3cM4kIJjd7mCJlHe$nLDIoWc9Bt5JPqZUmkHqlia2uwjM89vuO8MLLa3yy74=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "sophie@gmail.com",
+      "first_name": "sophie",
+      "last_name": "",
+      "email": "sophie@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T10:14:49.756226+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 19,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$KHscQfD8cwZ1scp8rjt2EF$4zrYjLNOWRbPqOkvjjLUn3P/LH6HjxvwFp2eifUjvJ8=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "kine@gmail.com",
+      "first_name": "Kine",
+      "last_name": "",
+      "email": "kine@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T11:08:35.008400+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "Kine"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 20,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ylVt8lPKzQ9AswspsCXIvJ$AgPGV4rYI2kY9dFXj52EPZm3tVSfYAPp6sHvyxc5qVU=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "codou@gmail.com",
+      "first_name": "codou",
+      "last_name": "",
+      "email": "codou@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T11:44:21.587816+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 21,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$tcbAF06xa0huRAnSUl8nOh$IbE0vf7UgsOPmPOz2fPZWET9Q7bRygQ1W0zt/Tyvlr0=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "kanta@gmail.com",
+      "first_name": "kanta",
+      "last_name": "",
+      "email": "kanta@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T11:55:46.718643+00:00",
+      "role": "participant",
+      "phone": "",
+      "organization_name": ""
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 22,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$hk1mgvV9ZnMME6C7BjnaxB$qA+N+GbrHCn4zBNl49vD/aIyTKUbo0xPT0MSYV+x6bk=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "fallou@gmail.com",
+      "first_name": "fallou",
+      "last_name": "",
+      "email": "fallou@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T12:53:22.349451+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "fallou"
+    }
+  },
+  {
+    "model": "events.user",
+    "pk": 23,
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ifSgEA20g6hMyxBt3yxHaN$Kb5vW6qn9k8cNstyL2DcNtZOYlsoUKnIi3MxYRm1JAI=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "rokhaya@gmail.com",
+      "first_name": "rokhaya",
+      "last_name": "",
+      "email": "rokhaya@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-07-09T12:59:29.749575+00:00",
+      "role": "organizer",
+      "phone": "",
+      "organization_name": "rokhaya"
+    }
+  },
+  {
+    "model": "events.event",
+    "pk": 3,
+    "fields": {
+      "title": "Soirée Thiéboudienne : Dîner Gastronomique",
+      "description": "Un menu dégustation revisitant les classiques de la cuisine sénégalaise.",
+      "category": "Gastronomie",
+      "date": "2026-09-05",
+      "time": "19:30:00",
+      "location": "Saint-Louis",
+      "venue": "Restaurant La Teranga, Saint-Louis",
+      "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600",
+      "is_public": true,
+      "allowed_users": [],
+      "places": 80,
+      "price": "25000.00",
+      "price_currency": "FCFA",
+      "organizer": 1,
+      "views_count": 654,
+      "registrations_count": 0,
+      "status": "published",
+      "created_at": "2026-07-08T17:17:00.635422+00:00",
+      "updated_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.event",
+    "pk": 1,
+    "fields": {
+      "title": "Festival Sabar & Percussions",
+      "description": "Une nuit de percussions traditionnelles et de sonorités modernes avec les meilleurs artistes sénégalais.",
+      "category": "Musique",
+      "date": "2026-08-24",
+      "time": "20:00:00",
+      "location": "Dakar",
+      "venue": "Corniche de Dakar",
+      "image": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600",
+      "is_public": true,
+      "allowed_users": [],
+      "places": 200,
+      "price": "10000.00",
+      "price_currency": "FCFA",
+      "organizer": 1,
+      "views_count": 1240,
+      "registrations_count": 0,
+      "status": "published",
+      "created_at": "2026-07-08T17:17:00.635422+00:00",
+      "updated_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.event",
+    "pk": 2,
+    "fields": {
+      "title": "Masterclass IA & Développement Web",
+      "description": "Une immersion pratique dans l'IA générative et les frameworks web modernes.",
+      "category": "Atelier",
+      "date": "2026-09-12",
+      "time": "10:00:00",
+      "location": "Dakar",
+      "venue": "Ker Xaleyi, Dakar",
+      "image": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600",
+      "is_public": true,
+      "allowed_users": [],
+      "places": 150,
+      "price": "0.00",
+      "price_currency": "FCFA",
+      "organizer": 1,
+      "views_count": 890,
+      "registrations_count": 0,
+      "status": "published",
+      "created_at": "2026-07-08T17:17:00.635422+00:00",
+      "updated_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "participant": 2,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "participant": 3,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 4,
+    "fields": {
+      "event": 2,
+      "participant": 5,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 5,
+    "fields": {
+      "event": 2,
+      "participant": 6,
+      "status": "waitlist",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T17:17:00.635422+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 6,
+    "fields": {
+      "event": 1,
+      "participant": 8,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T18:38:43.812130+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 7,
+    "fields": {
+      "event": 1,
+      "participant": 13,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T21:19:50.840329+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 8,
+    "fields": {
+      "event": 1,
+      "participant": 14,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-08T21:21:44.925075+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 9,
+    "fields": {
+      "event": 3,
+      "participant": 17,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-09T09:52:52.466891+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 10,
+    "fields": {
+      "event": 1,
+      "participant": 18,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-09T10:15:21.493775+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 11,
+    "fields": {
+      "event": 2,
+      "participant": 20,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-09T11:45:02.515641+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 12,
+    "fields": {
+      "event": 2,
+      "participant": 21,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-09T11:56:13.412560+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 14,
+    "fields": {
+      "event": 3,
+      "participant": 18,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-09T13:46:09.257846+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 15,
+    "fields": {
+      "event": 3,
+      "participant": 19,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-09T15:22:33.218818+00:00"
+    }
+  },
+  {
+    "model": "events.registration",
+    "pk": 16,
+    "fields": {
+      "event": 1,
+      "participant": 20,
+      "status": "confirmed",
+      "reminder_sent": false,
+      "registered_at": "2026-07-11T20:59:07.279369+00:00"
+    }
+  },
+  {
+    "model": "events.payment",
+    "pk": 3,
+    "fields": {
+      "event": 1,
+      "participant": 20,
+      "amount": "10000.00",
+      "currency": "FCFA",
+      "provider": "card",
+      "payment_method": "Carte bancaire",
+      "phone": "",
+      "reference": "2d4aeb06168e40ab",
+      "session_id": "8e86fae964bf46d0afbc59a6df6dd337",
+      "status": "completed",
+      "metadata": {
+        "confirmation_code": "demo-confirmation"
+      },
+      "created_at": "2026-07-11T20:59:07.283187+00:00",
+      "updated_at": "2026-07-11T20:59:09.738021+00:00"
+    }
+  },
+  {
+    "model": "events.payment",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "participant": 20,
+      "amount": "10000.00",
+      "currency": "FCFA",
+      "provider": "mobile_money",
+      "payment_method": "Wave",
+      "phone": "5262900202",
+      "reference": "d1975b84050d48d2",
+      "session_id": "a7f3b4bd08db41749b8cd1e8398e5846",
+      "status": "completed",
+      "metadata": {
+        "confirmation_code": "demo-confirmation"
+      },
+      "created_at": "2026-07-11T20:47:08.935068+00:00",
+      "updated_at": "2026-07-11T20:47:11.164723+00:00"
+    }
+  },
+  {
+    "model": "events.payment",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "participant": 20,
+      "amount": "10000.00",
+      "currency": "FCFA",
+      "provider": "mobile_money",
+      "payment_method": "Wave",
+      "phone": "5262900202",
+      "reference": "cb75d11ed9734e0c",
+      "session_id": "bd7103101f94401bab5dcc1d66d06670",
+      "status": "completed",
+      "metadata": {
+        "confirmation_code": "demo-confirmation"
+      },
+      "created_at": "2026-07-11T20:46:20.801901+00:00",
+      "updated_at": "2026-07-11T20:46:34.309868+00:00"
+    }
+  }
+]

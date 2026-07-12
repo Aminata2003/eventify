@@ -87,6 +87,7 @@ else:
             "PASSWORD": os.getenv("DB_PASSWORD", "bissouma8"),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
+            "DISABLE_SERVER_SIDE_CURSORS": True,
         }
     }
 
@@ -155,10 +156,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # En local : liste en dur. En prod : ajoutée via la variable d'env
 # CORS_ALLOWED_ORIGINS (ex: "https://eventify-xxxx.vercel.app").
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:5175",
-    "http://127.0.0.1:5175",
+    "https://eventify-three-mu.vercel.app"
 ] + [origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin]
 
 # Vercel crée une nouvelle URL "preview" à chaque déploiement
