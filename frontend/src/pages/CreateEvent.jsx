@@ -8,11 +8,15 @@ import { useAuth } from "../context/AuthContext";
 
 const CATEGORIES = [
   "Musique",
-  "Conférence",
+  "Atelier",
   "Gastronomie",
+  "Arts",
+  "Affaires",
+  "Bien-être",
+  "Sports",
+  "Religion",
+  "Conférence",
   "Networking",
-  "Art",
-  "Sport",
 ];
 
 function getTomorrowDate() {
@@ -252,8 +256,6 @@ export default function CreateEvent() {
 
 
       const eventId = created.id || created.event?.id;
-      console.log("Réponse création :", created);
-      console.log("ID récupéré :", eventId);
 
 if (eventId) {
   navigate(`/event/${eventId}`, { replace: true });

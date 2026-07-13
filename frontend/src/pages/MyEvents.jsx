@@ -5,10 +5,12 @@ import Navbar from "../components/Navbar";
 import TicketCard from "../components/TicketCard";
 import { getMyEvents, cancelRegistration, confirmWaitlistRegistration } from "../services/eventService";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../components/Toast";
 
 function MyEvents() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState("upcoming");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,8 +20,9 @@ function MyEvents() {
       await cancelRegistration(eventId);
       const data = await getMyEvents();
       setEvents(data);
+      toast.success("Inscription annulée avec succès.");
     } catch (err) {
-      alert("Erreur lors de l'annulation de l'inscription.");
+      toast.error("Erreur lors de l'annulation de l'inscription.");
     }
   };
 
@@ -32,9 +35,9 @@ function MyEvents() {
       await confirmWaitlistRegistration(registrationId);
       const data = await getMyEvents();
       setEvents(data);
-      alert("Votre place a été confirmée avec succès !");
+      toast.success("Votre place a été confirmée avec succès !");
     } catch (err) {
-      alert(err.response?.data?.detail || "Erreur lors de la confirmation de la place.");
+      toast.error(err.response?.data?.detail || "Erreur lors de la confirmation de la place.");
     }
   };
 
@@ -140,17 +143,12 @@ function MyEvents() {
             </p>
 
             {activeTab === "upcoming" && (
-              <div className="flex gap-3 mt-6">
-                <Link
-                  to="/"
-                  className="bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-orange-700 transition"
-                >
-                  Parcourir les événements
-                </Link>
-                <button className="border border-gray-200 text-gray-700 text-sm font-medium px-5 py-2.5 rounded-lg hover:border-primary transition">
-                  Importer le calendrier
-                </button>
-              </div>
+              <Link
+                to="/"
+                className="mt-6 bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-orange-700 transition"
+              >
+                Parcourir les événements
+              </Link>
             )}
           </div>
         )}

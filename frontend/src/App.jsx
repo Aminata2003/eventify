@@ -26,6 +26,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import OrganizerRoute from "./components/OrganizerRoute";
 
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./components/Toast";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -91,9 +92,11 @@ const router = createBrowserRouter(
 function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
     </AuthProvider>
   );
 }
 
-export default App;
+export default App;

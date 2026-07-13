@@ -84,7 +84,17 @@ class Command(BaseCommand):
         ]
 
         for name, email in participant_names:
-            User.objects.get_or_create(username=email, defaults={"email": email, "first_name": name.split()[0], "last_name": " ".join(name.split()[1:])})
+            user, created = User.objects.get_or_create(
+                username=email,
+                defaults={
+                    "email": email,
+                    "first_name": name.split()[0],
+                    "last_name": " ".join(name.split()[1:]),
+                }
+            )
+            if created:
+                user.set_password("demo123!")
+                user.save()
 
         first_event = Event.objects.first()
         if first_event:

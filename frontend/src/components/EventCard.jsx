@@ -59,9 +59,14 @@ function EventCard({ event }) {
         <img
           src={
             event.image ||
-            "https://via.placeholder.com/600x400"
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f5f5f4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23a8a29e'%3ESans image%3C/text%3E%3C/svg%3E"
           }
           alt={event.title}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src =
+              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f5f5f4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23a8a29e'%3ESans image%3C/text%3E%3C/svg%3E";
+          }}
           className="h-48 w-full object-cover"
         />
 
