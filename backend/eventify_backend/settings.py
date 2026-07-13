@@ -171,11 +171,22 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
+HAS_CLOUDINARY_CONFIG = all([
+    os.getenv("CLOUDINARY_CLOUD_NAME"),
+    os.getenv("CLOUDINARY_API_KEY"),
+    os.getenv("CLOUDINARY_API_SECRET"),
+])
+
 STORAGES = {
 
     "default": {
-        "BACKEND":
-        "cloudinary_storage.storage.MediaCloudinaryStorage",
+        # Le stockage local évite une erreur 500 lors de la création si les
+        # identifiants Cloudinary ne sont pas encore configurés.
+        "BACKEND": (
+            "cloudinary_storage.storage.MediaCloudinaryStorage"
+            if HAS_CLOUDINARY_CONFIG
+            else "django.core.files.storage.FileSystemStorage"
+        ),
     },
 
 

@@ -15,6 +15,26 @@ const CATEGORIES = [
   "Sport",
 ];
 
+function getTomorrowDate() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().slice(0, 10);
+}
+
+function formatApiError(err) {
+  if (err.code === "API_NOT_CONFIGURED") return err.message;
+
+  const data = err.response?.data;
+  if (typeof data?.detail === "string") return data.detail;
+  if (data && typeof data === "object") {
+    return Object.entries(data)
+      .map(([field, value]) => `${field === "non_field_errors" ? "Erreur" : field} : ${Array.isArray(value) ? value.join(" ") : value}`)
+      .join(" ");
+  }
+  if (!err.response) return "Impossible de joindre le serveur. Vérifiez la connexion et la configuration de l'API.";
+  return "Une erreur est survenue, réessaie dans un instant.";
+}
+
 
 export default function CreateEvent() {
 
@@ -44,8 +64,6 @@ export default function CreateEvent() {
     status: "published",
   });
   const [isEditMode, setIsEditMode] = useState(false);
-  const [loadingEvent, setLoadingEvent] = useState(false);
-
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -82,7 +100,6 @@ export default function CreateEvent() {
   useEffect(() => {
     if (!editEventId && editEventId !== 0) return;
 
-    setLoadingEvent(true);
     getEventById(editEventId)
       .then((event) => {
         // Faille 4 : vérifier que l'événement appartient bien à l'organisateur connecté
@@ -111,9 +128,6 @@ export default function CreateEvent() {
       })
       .catch(() => {
         setError("Impossible de charger l'événement à modifier.");
-      })
-      .finally(() => {
-        setLoadingEvent(false);
       });
   }, [editEventId]);
 
@@ -173,6 +187,7 @@ export default function CreateEvent() {
       !form.title.trim() ||
       !form.date ||
       !form.places ||
+      !form.category ||
       !form.location.trim()
     ) {
 
@@ -251,10 +266,7 @@ if (eventId) {
     } catch (err) {
 
 
-      const msg = err.response?.data?.detail ||
-                  (err.response?.data ? Object.entries(err.response.data).map(([k,v]) => `${k}: ${v}`).join(' | ') : null) ||
-                  "Une erreur est survenue, réessaie dans un instant.";
-      setError(msg);
+      setError(formatApiError(err));
 
 
     } finally {
@@ -470,6 +482,7 @@ if (eventId) {
 
               <input
                 type="datetime-local"
+                min={`${getTomorrowDate()}T00:00`}
                 value={form.date ? `${form.date}T${form.time || "00:00"}` : ""}
                 onChange={(e) => handleDateTimeChange(e.target.value)}
                 className="mt-2 w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -485,6 +498,7 @@ if (eventId) {
               </label>
 
               <select
+                required
                 value={form.category}
                 onChange={(e) => handleChange("category", e.target.value)}
                 className="mt-2 w-full rounded-lg border border-stone-300 px-4 py-2.5 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -523,6 +537,7 @@ if (eventId) {
               <input
                 type="number"
                 min="1"
+                required
                 value={form.places}
                 onChange={(e) =>
                   handleChange(

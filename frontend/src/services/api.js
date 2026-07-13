@@ -1,6 +1,14 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const configuredBaseUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
+const isProduction = import.meta.env.PROD;
+
+// En production, une URL explicite évite d'envoyer les requêtes vers l'ordinateur
+// de la personne qui consulte le site (127.0.0.1).
+const BASE_URL = configuredBaseUrl || (isProduction ? "" : "http://127.0.0.1:8000/api");
+const API_CONFIGURATION_ERROR = isProduction && !configuredBaseUrl
+  ? "Configuration manquante : VITE_API_URL doit pointer vers l'API Eventify."
+  : null;
 
 const api = axios.create({
 	baseURL: BASE_URL,
@@ -21,6 +29,11 @@ const clearTokens = () => {
 
 // Attach access token
 api.interceptors.request.use((config) => {
+	if (API_CONFIGURATION_ERROR) {
+		return Promise.reject(Object.assign(new Error(API_CONFIGURATION_ERROR), {
+			code: "API_NOT_CONFIGURED",
+		}));
+	}
 	const token = getAccessToken();
 	// Skip invalid token values that may have been stored by accident
 	if (token && token !== "null" && token !== "undefined") {

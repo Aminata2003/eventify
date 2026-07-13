@@ -40,6 +40,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     organizer = UserSerializer(read_only=True)
     capacity = serializers.ReadOnlyField()
+    allowed_users = serializers.SerializerMethodField()
 
     registrations_count = serializers.SerializerMethodField()
     confirmed_count = serializers.SerializerMethodField()
@@ -126,6 +127,14 @@ class EventSerializer(serializers.ModelSerializer):
             if reg:
                 return reg.id
         return None
+
+    def get_allowed_users(self, obj):
+        """Only the event owner may see the complete invitation list."""
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            if obj.organizer_id == request.user.id:
+                return obj.allowed_users or []
+        return []
 
 
 class EventCreateSerializer(serializers.ModelSerializer):

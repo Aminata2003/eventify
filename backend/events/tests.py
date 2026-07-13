@@ -3,7 +3,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from events.models import Event, Registration
+from events.models import Event, Payment, Registration
 
 User = get_user_model()
 
@@ -80,6 +80,55 @@ class EventifySecurityTests(APITestCase):
         url = f"/api/events/{self.event.id}/register/"
         response = self.client.post(url, {})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_paid_event_requires_payment_flow(self):
+        self.event.price = 1000
+        self.event.save()
+        self.client.force_authenticate(user=self.participant)
+
+        response = self.client.post(
+            f"/api/events/{self.event.id}/register/",
+            {"paymentMethod": "card"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(Registration.objects.filter(event=self.event, participant=self.participant).exists())
+
+    def test_payment_confirmation_is_limited_to_owner(self):
+        other_participant = User.objects.create_user(
+            username="other@example.com",
+            email="other@example.com",
+            password="Aa123456Password",
+            role="participant",
+        )
+        payment = Payment.objects.create(
+            event=self.event,
+            participant=self.participant,
+            amount=1000,
+            provider="card",
+            reference="payment-owner-test",
+            session_id="owner-session-test",
+            status="pending",
+        )
+        self.client.force_authenticate(user=other_participant)
+
+        response = self.client.post("/api/payments/confirm/", {"sessionId": payment.session_id})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, "pending")
+
+    def test_private_event_is_hidden_and_blocks_uninvited_participant(self):
+        self.event.is_public = False
+        self.event.allowed_users = []
+        self.event.save()
+        self.client.force_authenticate(user=self.participant)
+
+        response = self.client.get("/api/events/")
+        self.assertNotIn(self.event.id, [event["id"] for event in response.data])
+
+        response = self.client.post(f"/api/events/{self.event.id}/register/", {})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_faille_4_participant_cannot_access_dashboard_stats(self):
         self.client.force_authenticate(user=self.participant)
@@ -196,4 +245,3 @@ class EventifySecurityTests(APITestCase):
         self.assertEqual(reg.status, "pending")
         # Check that registered_at is very close to now (less than 5 seconds difference)
         self.assertLess((timezone.now() - reg.registered_at).total_seconds(), 5)
-

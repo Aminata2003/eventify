@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -38,6 +38,18 @@ from decimal import Decimal
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+
+def is_user_allowed_for_private_event(event, user):
+    """Return whether an invited participant may access a private event."""
+    if event.is_public or event.organizer_id == user.id:
+        return True
+    allowed_emails = {
+        str(email).strip().lower()
+        for email in (event.allowed_users or [])
+        if email
+    }
+    return (user.email or "").strip().lower() in allowed_emails
 
 
 class IsOrganizerOrReadOnly(permissions.BasePermission):
@@ -86,7 +98,9 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        if self.action in ["me", "search"]:
+        if self.action == "search":
+            return [IsOrganizer()]
+        if self.action == "me":
             return [IsAuthenticated()]
         return [IsAuthenticated()]
 
@@ -143,12 +157,18 @@ class EventViewSet(viewsets.ModelViewSet):
         )
         user = self.request.user
         if user and user.is_authenticated:
+            invited_event_ids = [
+                event.id
+                for event in Event.objects.filter(status="published", is_public=False).only("id", "allowed_users")
+                if is_user_allowed_for_private_event(event, user)
+            ]
             return base.filter(
-                Q(status="published")
+                Q(status="published", is_public=True)
                 | Q(organizer=user)
                 | Q(registrations__participant=user)
+                | Q(pk__in=invited_event_ids)
             ).distinct()
-        return base.filter(status="published")
+        return base.filter(status="published", is_public=True)
 
     def get_serializer_class(self):
         if self.action in {"create", "update", "partial_update"}:
@@ -245,6 +265,9 @@ class RegistrationViewSet(viewsets.ModelViewSet):
 
         participant = request.user
 
+        if not is_user_allowed_for_private_event(event, participant):
+            raise PermissionDenied("Cet événement privé est réservé aux personnes invitées.")
+
         if participant.role != "participant":
             raise ValidationError({"detail": "Seuls les participants peuvent s'inscrire à une activité."})
 
@@ -266,6 +289,11 @@ class RegistrationViewSet(viewsets.ModelViewSet):
         # 4. Ne pas pouvoir s'inscrire deux fois
         if Registration.objects.filter(event=event, participant=participant).exists():
             return Response({"detail": "Vous êtes déjà inscrit à cet événement (ou en liste d'attente)."}, status=status.HTTP_200_OK)
+
+        # Un événement payant doit obligatoirement passer par la session de
+        # paiement : le client ne peut pas confirmer une inscription seul.
+        if event.price and event.price > 0:
+            raise ValidationError({"detail": "Cet événement est payant. Veuillez utiliser le parcours de paiement."})
 
         # 5. Contrôle de capacité — Bug #2 corrigé : on compte confirmed + pending
         confirmed_count = event.registrations.filter(status="confirmed").count()
@@ -393,6 +421,9 @@ class PaymentViewSet(viewsets.ViewSet):
 
         participant = request.user
 
+        if not is_user_allowed_for_private_event(event, participant):
+            raise PermissionDenied("Cet événement privé est réservé aux personnes invitées.")
+
         if participant.role != "participant":
             raise ValidationError({"detail": "Seuls les participants peuvent effectuer un paiement pour une activité."})
 
@@ -499,9 +530,19 @@ class PaymentViewSet(viewsets.ViewSet):
             raise ValidationError({"sessionId": "L'identifiant de session est requis."})
 
         try:
-            payment = Payment.objects.get(session_id=session_id, status="pending")
+            payment = Payment.objects.get(
+                session_id=session_id,
+                status="pending",
+                participant=request.user,
+            )
         except Payment.DoesNotExist:
             raise ValidationError({"sessionId": "Session de paiement invalide ou déjà confirmée."})
+
+        from django.utils import timezone
+        if payment.created_at < timezone.now() - timedelta(minutes=15):
+            payment.status = "failed"
+            payment.save(update_fields=["status", "updated_at"])
+            raise ValidationError({"sessionId": "Cette session de paiement a expiré. Veuillez recommencer le paiement."})
 
         payment.status = "completed"
         if isinstance(payment.metadata, dict):
@@ -589,7 +630,9 @@ class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        payload = {**request.data, "role": request.data.get("role", "participant")}
+        if request.data.get("role") == "organizer":
+            raise ValidationError({"role": "Utilisez l'inscription organisateur pour créer ce type de compte."})
+        payload = {**request.data, "role": "participant"}
         serializer = OrganizerRegisterSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()

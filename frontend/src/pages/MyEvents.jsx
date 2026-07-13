@@ -13,14 +13,6 @@ function MyEvents() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔒 Page réservée aux participants connectés.
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: "/my-events" }} />;
-  }
-  if (user.role === "organizer") {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const handleCancel = async (eventId) => {
     try {
       await cancelRegistration(eventId);
@@ -48,6 +40,12 @@ function MyEvents() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!user || user.role === "organizer") {
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
     setLoading(true);
     getMyEvents()
       .then((data) => !cancelled && setEvents(data))
@@ -55,7 +53,16 @@ function MyEvents() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
+
+  // Les hooks doivent être appelés avant toute redirection afin de conserver
+  // le même ordre d'exécution à chaque rendu.
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: "/my-events" }} />;
+  }
+  if (user.role === "organizer") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
   const upcomingEvents = events.filter((e) => e.date >= today);
