@@ -12,10 +12,14 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-key")
 
 DEBUG = os.getenv("DEBUG", "true").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv(
-    "ALLOWED_HOSTS",
-    "localhost,127.0.0.1"
-).split(",")
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        "ALLOWED_HOSTS",
+        "localhost,127.0.0.1"
+    ).split(",")
+    if host.strip()
+]
 
 
 INSTALLED_APPS = [
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 
     # CORS doit être avant CommonMiddleware
     "corsheaders.middleware.CorsMiddleware",
@@ -96,7 +101,7 @@ ASGI_APPLICATION = "eventify_backend.asgi.application"
 
 USE_SQLITE = os.getenv(
     "DB_USE_SQLITE",
-    "false"
+    "true" if DEBUG and not os.getenv("DATABASE_URL") else "false"
 ).lower() == "true"
 
 
@@ -346,35 +351,19 @@ if not EMAIL_BACKEND:
 
 
 CORS_ALLOWED_ORIGINS = [
-
     "http://localhost:5173",
-
     "http://127.0.0.1:5173",
-
     "http://localhost:5175",
-
     "http://127.0.0.1:5175",
-
 ] + [
-
-    origin
-    for origin in os.getenv(
-        "CORS_ALLOWED_ORIGINS",
-        ""
-    ).split(",")
-
-    if origin
-
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
 ]
-
-
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
-
     r"^https://eventify.*\.vercel\.app$",
-
 ]
-
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -385,17 +374,13 @@ CORS_ALLOW_CREDENTIALS = True
 # ==========================
 
 
-CSRF_TRUSTED_ORIGINS = [
-
-    origin
-    for origin in os.getenv(
-        "CSRF_TRUSTED_ORIGINS",
-        ""
-    ).split(",")
-
-    if origin
-
-]
+CSRF_TRUSTED_ORIGINS = []
+for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(","):
+    origin = origin.strip()
+    if origin:
+        if not origin.startswith(("http://", "https://")):
+            origin = f"https://{origin}"
+        CSRF_TRUSTED_ORIGINS.append(origin)
 
 
 SECURE_PROXY_SSL_HEADER = (

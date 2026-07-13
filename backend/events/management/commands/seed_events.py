@@ -8,9 +8,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         User.objects.filter(username="organizer").delete()
-        organizer, _ = User.objects.get_or_create(
+        organizer = User.objects.create_user(
             username="organizer",
-            defaults={"email": "organizer@eventify.dev", "role": "organizer", "first_name": "Eventify", "last_name": "Sénégal"},
+            email="organizer@eventify.dev",
+            password="organizer123",
+            role="organizer",
+            first_name="Eventify",
+            last_name="Sénégal",
+            organization_name="Eventify Sénégal",
         )
 
         events_data = [

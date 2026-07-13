@@ -32,7 +32,8 @@ export async function login(usernameOrEmail, password) {
 
 export async function register(name, email, password, role = "participant") {
   const payload = { name, email: email.trim().toLowerCase(), password, role };
-  const res = await api.post("/auth/register/", payload);
+  const endpoint = role === "organizer" ? "/auth/register/organizer/" : "/auth/register/";
+  const res = await api.post(endpoint, payload);
   return res.data.user;
 }
 
