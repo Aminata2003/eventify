@@ -23,8 +23,7 @@ def _send_email_task(subject, message, recipient_list):
     
     # Logs temporaires de diagnostic
     logger.warning("DEBUG: Longueur de BREVO_API_KEY = %s", len(brevo_api_key) if brevo_api_key else 0)
-    keys_detected = [k for k in os.environ.keys() if "KEY" in k or "API" in k or "BREVO" in k]
-    logger.warning("DEBUG: Clés d'environnement détectées = %s", keys_detected)
+    logger.warning("DEBUG: TOUTES les clés d'environnement détectées = %s", list(os.environ.keys()))
     sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@eventify.dev")
     
     # Extraction de l'email s'il y a un format "Nom <email>"
