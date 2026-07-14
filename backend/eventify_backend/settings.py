@@ -334,6 +334,9 @@ EMAIL_USE_SSL = os.getenv(
 ).lower() == "true"
 
 
+EMAIL_TIMEOUT = 5
+
+
 
 if not EMAIL_BACKEND:
 
