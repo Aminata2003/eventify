@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from rest_framework import serializers
-from .models import Event, Registration, Payment, Review
+from .models import Event, Registration, Payment, Review, Notification
 
 User = get_user_model()
 
@@ -48,7 +48,7 @@ class EventSerializer(serializers.ModelSerializer):
     waitlist_count = serializers.SerializerMethodField()
     user_registration_status = serializers.SerializerMethodField()
     user_registration_id = serializers.SerializerMethodField()
-
+    is_favorite = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -77,6 +77,7 @@ class EventSerializer(serializers.ModelSerializer):
             "waitlist_count",
             "user_registration_status",
             "user_registration_id",
+            "is_favorite",
             "status",
             "created_at",
             "updated_at",
@@ -111,6 +112,12 @@ class EventSerializer(serializers.ModelSerializer):
         return obj.registrations.filter(
             status="waitlist"
         ).count()
+
+    def get_is_favorite(self, obj):
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            return obj.favorited_by.filter(id=request.user.id).exists()
+        return False
 
     def get_user_registration_status(self, obj):
         request = self.context.get("request")
@@ -361,3 +368,10 @@ class OrganizerRegisterSerializer(serializers.Serializer):
             organization_name=organization_name,
         )
         return user
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ["id", "event", "message", "is_read", "created_at"]
+        read_only_fields = ["id", "event", "message", "created_at"]

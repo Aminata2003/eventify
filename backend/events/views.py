@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Event, Registration, Payment, Review
+from .models import Event, Registration, Payment, Review, Notification
 from .notifications import (
     send_registration_notifications,
     send_cancellation_notification_to_organizer,
@@ -30,6 +30,7 @@ from .serializers import (
     UserSerializer,
     PaymentSerializer,
     ReviewSerializer,
+    NotificationSerializer,
 )
 
 import logging
@@ -192,6 +193,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.instance
+        old_title = instance.title
+        old_description = instance.description
+        old_price = instance.price
         old_date = instance.date
         old_time = instance.time
         old_location = instance.location
@@ -223,6 +227,12 @@ class EventViewSet(viewsets.ModelViewSet):
 
         # Check changes for notification
         changes = []
+        if old_title != event.title:
+            changes.append(f"- Titre : {old_title} -> {event.title}")
+        if old_description != event.description:
+            changes.append("- Description modifiée")
+        if old_price != event.price:
+            changes.append(f"- Prix : {old_price} -> {event.price}")
         if old_date != event.date:
             changes.append(f"- Date : {old_date.strftime('%d/%m/%Y')} -> {event.date.strftime('%d/%m/%Y')}")
         if old_time != event.time:
@@ -241,11 +251,23 @@ class EventViewSet(viewsets.ModelViewSet):
             confirmed_participants = [r.participant for r in event.registrations.filter(status="confirmed")]
             if confirmed_participants:
                 send_event_cancelled_notification(event, confirmed_participants)
+            for r in event.registrations.all():
+                Notification.objects.create(
+                    recipient=r.participant,
+                    event=event,
+                    message=f"L'événement '{event.title}' auquel vous êtes inscrit a été annulé."
+                )
         elif changes:
             confirmed_participants = [r.participant for r in event.registrations.filter(status="confirmed")]
             if confirmed_participants:
                 changes_desc = "\n".join(changes)
                 send_event_modified_notification(event, confirmed_participants, changes_desc)
+            for r in event.registrations.all():
+                Notification.objects.create(
+                    recipient=r.participant,
+                    event=event,
+                    message=f"L'événement '{event.title}' auquel vous êtes inscrit a été modifié."
+                )
 
         # If capacity increased, notify next waitlisted participants
         if event.places > old_places:
@@ -279,6 +301,16 @@ class EventViewSet(viewsets.ModelViewSet):
         registrations = event.registrations.select_related("participant")
         serializer = RegistrationSerializer(registrations, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def favorite(self, request, pk=None):
+        event = self.get_object()
+        if request.user.favorites.filter(id=event.id).exists():
+            request.user.favorites.remove(event)
+            return Response({"favorited": False}, status=status.HTTP_200_OK)
+        else:
+            request.user.favorites.add(event)
+            return Response({"favorited": True}, status=status.HTTP_200_OK)
 
 
 class RegistrationViewSet(viewsets.ModelViewSet):
@@ -710,3 +742,11 @@ class DashboardStatsViewSet(viewsets.ViewSet):
             "page_views": page_views_total,
             "revenue": revenue_qs or 0,
         })
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient=self.request.user)
