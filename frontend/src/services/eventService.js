@@ -524,3 +524,32 @@ export function exportParticipantsCSV(
 
   URL.revokeObjectURL(url);
 }
+
+
+// ================= FAVORITES & NOTIFICATIONS =================
+
+export async function toggleFavoriteEvent(eventId) {
+  if (USE_API) {
+    if (!ensureValidId(eventId)) throw new Error("Invalid event id");
+    const res = await api.post(`/events/${eventId}/favorite/`);
+    return res.data;
+  }
+  await delay();
+  return { favorited: true };
+}
+
+export async function getNotifications() {
+  if (USE_API) {
+    const res = await api.get("/notifications/");
+    return res.data;
+  }
+  return [];
+}
+
+export async function markNotificationAsRead(notificationId) {
+  if (USE_API) {
+    const res = await api.patch(`/notifications/${notificationId}/`, { is_read: true });
+    return res.data;
+  }
+  return { success: true };
+}

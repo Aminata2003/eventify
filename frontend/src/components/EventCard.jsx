@@ -1,8 +1,14 @@
 import { Heart, MapPin, Calendar, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { toggleFavoriteEvent } from "../services/eventService";
 
 
 function EventCard({ event, featured = false }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isFavorite, setIsFavorite] = useState(event.is_favorite || false);
 
   const formattedDate = event.date
     ? new Date(event.date).toLocaleDateString("fr-FR", {
@@ -48,12 +54,28 @@ function EventCard({ event, featured = false }) {
   };
 
 
+  const handleFavoriteClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const res = await toggleFavoriteEvent(event.id);
+      setIsFavorite(res.favorited);
+    } catch (err) {
+      console.error("Error toggling favorite", err);
+    }
+  };
+
+
   return (
 
-    <div className={`rounded-xl border bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col ${
+    <div className={`rounded-xl border bg-white shadow-sm transition-all duration-300 transform hover:-translate-y-1 hover:scale-[1.02] hover:shadow-xl overflow-hidden flex flex-col ${
       featured
-        ? "border-orange-300 shadow-orange-100 hover:shadow-orange-200 ring-1 ring-orange-200 scale-[1.01]"
-        : "border-gray-100 hover:shadow-md"
+        ? "border-orange-300 shadow-orange-100 ring-1 ring-orange-200 hover:border-orange-500"
+        : "border-gray-100 hover:border-primary/50"
     }`}>
 
 
@@ -89,11 +111,17 @@ function EventCard({ event, featured = false }) {
           </span>
         )}
 
-        {!featured && (
-          <button className="absolute right-3 top-3 rounded-full bg-white p-1.5">
-            <Heart size={16} className="text-gray-500" />
-          </button>
-        )}
+        <button 
+          onClick={handleFavoriteClick}
+          className={`absolute right-3 rounded-full bg-white p-1.5 shadow-sm transition hover:scale-110 z-20 ${
+            featured ? "top-12" : "top-3"
+          }`}
+        >
+          <Heart 
+            size={16} 
+            className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"} 
+          />
+        </button>
 
 
       </div>
