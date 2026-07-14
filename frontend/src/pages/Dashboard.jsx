@@ -618,7 +618,8 @@ export default function Dashboard() {
             }
 
 
-          </div>          <table className="w-full text-left text-sm">
+          </div>          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[800px]">
 
 
             <thead className="text-xs uppercase tracking-wide text-stone-400">
@@ -1073,6 +1074,7 @@ export default function Dashboard() {
 
 
           </table>
+        </div>
 
 
 
