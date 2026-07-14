@@ -24,7 +24,15 @@ def _send_email(subject, message, recipient_list):
         )
         return True
     except Exception as exc:
-        logger.error("Échec envoi email à %s: %s", recipient_list, exc)
+        logger.error(
+            "Échec envoi email à %s (H='%s', P=%s, U='%s', F='%s'): %s",
+            recipient_list,
+            getattr(settings, "EMAIL_HOST", "Non défini"),
+            getattr(settings, "EMAIL_PORT", "Non défini"),
+            getattr(settings, "EMAIL_HOST_USER", "Non défini"),
+            getattr(settings, "DEFAULT_FROM_EMAIL", "Non défini"),
+            exc
+        )
         return False
 
 
