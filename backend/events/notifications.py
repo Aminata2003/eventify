@@ -14,29 +14,62 @@ def _format_event_datetime(event):
 
 
 import threading
+import requests
+import json
 
 def _send_email_task(subject, message, recipient_list):
-    try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            recipient_list,
-            fail_silently=False,
-        )
-    except Exception as exc:
-        logger.error(
-            "Échec envoi email en arrière-plan à %s (H='%s', P=%s, U='%s', F='%s'): %s",
-            recipient_list,
-            getattr(settings, "EMAIL_HOST", "Non défini"),
-            getattr(settings, "EMAIL_PORT", "Non défini"),
-            getattr(settings, "EMAIL_HOST_USER", "Non défini"),
-            getattr(settings, "DEFAULT_FROM_EMAIL", "Non défini"),
-            exc
-        )
+    import os
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    sender_email = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@eventify.dev")
+    
+    # Extraction de l'email s'il y a un format "Nom <email>"
+    import re
+    email_match = re.search(r'<([^>]+)>', sender_email)
+    clean_sender = email_match.group(1) if email_match else sender_email
+
+    if brevo_api_key:
+        # Envoi via l'API Web Brevo (HTTPS Port 443 - jamais bloqué)
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": brevo_api_key,
+            "content-type": "application/json"
+        }
+        for recipient in recipient_list:
+            payload = {
+                "sender": {"name": "Eventify", "email": clean_sender},
+                "to": [{"email": recipient}],
+                "subject": subject,
+                "textContent": message
+            }
+            try:
+                res = requests.post(url, headers=headers, json=payload, timeout=10)
+                if res.status_code not in [200, 201, 202]:
+                    logger.error("Échec API Brevo (%s): %s", res.status_code, res.text)
+            except Exception as exc:
+                logger.error("Erreur HTTP Brevo à %s: %s", recipient, exc)
+    else:
+        # Fallback SMTP Classique (en local)
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                recipient_list,
+                fail_silently=False,
+            )
+        except Exception as exc:
+            logger.error(
+                "Échec envoi email en arrière-plan à %s (H='%s', P=%s, U='%s', F='%s'): %s",
+                recipient_list,
+                getattr(settings, "EMAIL_HOST", "Non défini"),
+                getattr(settings, "EMAIL_PORT", "Non défini"),
+                getattr(settings, "EMAIL_HOST_USER", "Non défini"),
+                getattr(settings, "DEFAULT_FROM_EMAIL", "Non défini"),
+                exc
+            )
 
 def _send_email(subject, message, recipient_list):
-    # Lancement de l'envoi d'e-mail dans un thread séparé
     thread = threading.Thread(
         target=_send_email_task,
         args=(subject, message, recipient_list),
