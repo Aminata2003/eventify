@@ -163,8 +163,9 @@ export default function ParticipantsList() {
         </div>
 
        {/* Tableau */}
-<div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
-  <table className="w-full text-left text-sm">
+        <div className="mt-4 rounded-xl border border-stone-200 bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[600px]">
 
     <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-400">
       <tr>
@@ -260,6 +261,7 @@ export default function ParticipantsList() {
     </tbody>
 
   </table>
+        </div>
 
           
 
