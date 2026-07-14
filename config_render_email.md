@@ -44,8 +44,8 @@ Clique sur **"Add Environment Variable"** et ajoute chacune des variables ci-des
 | `EMAIL_PORT` | `587` |
 | `EMAIL_USE_TLS` | `true` |
 | `EMAIL_HOST_USER` | l'adresse Gmail utilisée pour l'app |
-| `EMAIL_HOST_PASSWORD` | la clé à 16 caractères (ex: `abcd efgh ijkl mnop`) |
-| `DEFAULT_FROM_EMAIL` | `Eventify <adresse@gmail.com>` |
+| `` | la clé à 16 caractères (ex: `abcd efgh ijkl mnop`) |
+| `DEFAULT_FROM_EMAIL` | `EMAIL_HOST_PASSWORDEventify <adresse@gmail.com>` |
 | `FRONTEND_URL` | `https://eventify-xyz.vercel.app` |
 
 > [!IMPORTANT]
