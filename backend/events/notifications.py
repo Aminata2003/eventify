@@ -13,7 +13,9 @@ def _format_event_datetime(event):
     return date_text, time_text
 
 
-def _send_email(subject, message, recipient_list):
+import threading
+
+def _send_email_task(subject, message, recipient_list):
     try:
         send_mail(
             subject,
@@ -22,10 +24,9 @@ def _send_email(subject, message, recipient_list):
             recipient_list,
             fail_silently=False,
         )
-        return True
     except Exception as exc:
         logger.error(
-            "Échec envoi email à %s (H='%s', P=%s, U='%s', F='%s'): %s",
+            "Échec envoi email en arrière-plan à %s (H='%s', P=%s, U='%s', F='%s'): %s",
             recipient_list,
             getattr(settings, "EMAIL_HOST", "Non défini"),
             getattr(settings, "EMAIL_PORT", "Non défini"),
@@ -33,7 +34,16 @@ def _send_email(subject, message, recipient_list):
             getattr(settings, "DEFAULT_FROM_EMAIL", "Non défini"),
             exc
         )
-        return False
+
+def _send_email(subject, message, recipient_list):
+    # Lancement de l'envoi d'e-mail dans un thread séparé
+    thread = threading.Thread(
+        target=_send_email_task,
+        args=(subject, message, recipient_list),
+        daemon=True
+    )
+    thread.start()
+    return True
 
 
 def send_registration_notifications(event, participant, payment_method=None):
