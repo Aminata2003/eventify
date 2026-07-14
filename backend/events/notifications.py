@@ -212,3 +212,39 @@ def send_participant_cancellation_confirmation(event, participant):
     )
     _send_email(subject, message, [participant.email])
 
+
+def send_private_event_invitation(event, invited_email, frontend_url):
+    """Envoie une invitation par e-mail pour un événement privé.
+
+    Appelée quand un organisateur ajoute une adresse e-mail dans allowed_users.
+    Le destinataire n'est pas forcément inscrit sur la plateforme.
+    """
+    date_text, time_text = _format_event_datetime(event)
+    event_url = f"{frontend_url.rstrip('/')}/event/{event.id}"
+
+    subject = f"Vous êtes invité(e) à l'événement : {event.title}"
+    message = (
+        f"Bonjour,\n\n"
+        f"L'organisateur {event.organizer.get_full_name() or event.organizer.username} "
+        f"vous invite à participer à l'événement privé :\n\n"
+        f"  📅 {event.title}\n"
+        f"  🗓  Date : {date_text} à {time_text}\n"
+        f"  📍 Lieu : {event.location}"
+        + (f" — {event.venue}" if event.venue else "")
+        + "\n"
+    )
+    if event.price and event.price > 0:
+        message += f"  💰 Prix : {event.price} {event.price_currency}\n"
+    else:
+        message += "  🎟  Accès : Gratuit\n"
+
+    message += (
+        f"\nPour voir les détails et vous inscrire, cliquez sur le lien ci-dessous :\n"
+        f"{event_url}\n\n"
+        f"Cet événement est privé. Ce lien est destiné uniquement aux personnes invitées.\n\n"
+        f"À très bientôt,\n"
+        f"L'équipe Eventify"
+    )
+    _send_email(subject, message, [invited_email])
+
+

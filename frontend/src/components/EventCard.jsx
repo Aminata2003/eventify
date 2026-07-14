@@ -1,8 +1,8 @@
-import { Heart, MapPin, Calendar } from "lucide-react";
+import { Heart, MapPin, Calendar, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 
-function EventCard({ event }) {
+function EventCard({ event, featured = false }) {
 
   const formattedDate = event.date
     ? new Date(event.date).toLocaleDateString("fr-FR", {
@@ -50,11 +50,18 @@ function EventCard({ event }) {
 
   return (
 
-    <div className="rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+    <div className={`rounded-xl border bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col ${
+      featured
+        ? "border-orange-300 shadow-orange-100 hover:shadow-orange-200 ring-1 ring-orange-200 scale-[1.01]"
+        : "border-gray-100 hover:shadow-md"
+    }`}>
 
 
       <div className="relative">
 
+        {featured && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 via-orange-500 to-red-400 z-10" />
+        )}
 
         <img
           src={
@@ -67,7 +74,7 @@ function EventCard({ event }) {
             e.currentTarget.src =
               "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect width='600' height='400' fill='%23f5f5f4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23a8a29e'%3ESans image%3C/text%3E%3C/svg%3E";
           }}
-          className="h-48 w-full object-cover"
+          className={`w-full object-cover transition-transform duration-300 hover:scale-[1.03] ${featured ? "h-52" : "h-48"}`}
         />
 
 
@@ -75,10 +82,18 @@ function EventCard({ event }) {
           {event.category}
         </span>
 
+        {featured && (
+          <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md">
+            <Zap size={11} fill="currentColor" />
+            Événement vedette
+          </span>
+        )}
 
-        <button className="absolute right-3 top-3 rounded-full bg-white p-1.5">
-          <Heart size={16} className="text-gray-500" />
-        </button>
+        {!featured && (
+          <button className="absolute right-3 top-3 rounded-full bg-white p-1.5">
+            <Heart size={16} className="text-gray-500" />
+          </button>
+        )}
 
 
       </div>
@@ -88,7 +103,7 @@ function EventCard({ event }) {
       <div className="flex flex-1 flex-col p-6">
 
 
-        <div className="flex items-center gap-1 text-xs font-medium text-primary">
+        <div className={`flex items-center gap-1 text-xs font-medium ${featured ? "text-orange-600" : "text-primary"}`}>
 
           <Calendar size={12} />
 
@@ -100,7 +115,7 @@ function EventCard({ event }) {
 
 
 
-        <h3 className="mt-2 font-semibold leading-snug text-gray-900">
+        <h3 className={`mt-2 font-semibold leading-snug text-gray-900 ${featured ? "text-base" : ""}`}>
           {event.title}
         </h3>
 
@@ -137,7 +152,7 @@ function EventCard({ event }) {
         <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
 
 
-          <span className="font-semibold text-gray-900">
+          <span className={`font-semibold ${featured ? "text-orange-600 text-base" : "text-gray-900"}`}>
             {formatPrice()}
           </span>
 
@@ -145,7 +160,7 @@ function EventCard({ event }) {
 
           <Link
             to={`/event/${event.id}`}
-            className="text-sm font-medium text-primary hover:underline"
+            className={`text-sm font-medium hover:underline ${featured ? "text-orange-600" : "text-primary"}`}
           >
             Voir les détails
           </Link>
@@ -163,4 +178,4 @@ function EventCard({ event }) {
 }
 
 
-export default EventCard;
+export default EventCard;

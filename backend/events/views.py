@@ -18,6 +18,7 @@ from .notifications import (
     send_cancellation_notification_to_organizer,
     send_waitlist_notification,
     send_waitlist_available_notification,
+    send_private_event_invitation,
 )
 from .filters import EventFilter
 from .serializers import (
@@ -178,7 +179,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         if not self.request.user or self.request.user.is_anonymous:
             raise NotAuthenticated("Authentication credentials were not provided.")
-        serializer.save(organizer=self.request.user)
+        event = serializer.save(organizer=self.request.user)
+        # Envoyer invitations si l'evenement est prive et a des invites
+        if not event.is_public and event.allowed_users:
+            frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+            for email in event.allowed_users:
+                if email and isinstance(email, str) and email.strip():
+                    try:
+                        send_private_event_invitation(event, email.strip(), frontend_url)
+                    except Exception as exc:
+                        logger.error("Erreur envoi invitation privee: %s", exc)
 
     def perform_update(self, serializer):
         instance = serializer.instance
@@ -188,8 +198,28 @@ class EventViewSet(viewsets.ModelViewSet):
         old_venue = instance.venue
         old_status = instance.status
         old_places = instance.places
+        # Capturer l'ancienne liste d'invites avant la sauvegarde
+        old_allowed_users = set(
+            str(e).strip().lower()
+            for e in (instance.allowed_users or [])
+            if e and str(e).strip()
+        )
 
         event = serializer.save()
+
+        # Envoyer invitations aux nouveaux emails ajoutes dans allowed_users
+        if not event.is_public and event.allowed_users:
+            frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+            new_emails = [
+                e for e in (event.allowed_users or [])
+                if e and isinstance(e, str) and e.strip()
+                and e.strip().lower() not in old_allowed_users
+            ]
+            for email in new_emails:
+                try:
+                    send_private_event_invitation(event, email.strip(), frontend_url)
+                except Exception as exc:
+                    logger.error("Erreur envoi invitation privee: %s", exc)
 
         # Check changes for notification
         changes = []

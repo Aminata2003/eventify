@@ -230,7 +230,17 @@ export default function Events() {
 
   };
 
-  // derive categories and locations from loaded events
+  // Les 3 prochains evenements a venir sont mis en avant
+  const featuredEventIds = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = events
+      .filter((e) => e.date >= today && e.status !== "cancelled")
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 3)
+      .map((e) => e.id);
+    return new Set(upcoming);
+  }, [events]);
+
   const derivedCategories = useMemo(() => {
     const set = new Set(events.map((e) => e.category).filter(Boolean));
     return ["Tous les événements", ...Array.from(set)];
@@ -348,6 +358,7 @@ export default function Events() {
                   <EventCard
                     key={event.id}
                     event={event}
+                    featured={featuredEventIds.has(event.id)}
                   />
 
                 ))

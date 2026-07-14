@@ -1,6 +1,6 @@
-import { Search } from "lucide-react";
+import { Search, Bell } from "lucide-react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 
 function NavbarPublic() {
@@ -9,6 +9,20 @@ function NavbarPublic() {
   const location = useLocation();
   const [searchInput, setSearchInput] = useState("");
   const firstName = user?.name || user?.email?.split("@")[0] || "Utilisateur";
+
+  // Compteur de notifications non lues (localStorage)
+  const unreadNotifCount = useMemo(() => {
+    if (!user || user.role !== "participant") return 0;
+    try {
+      const read = JSON.parse(localStorage.getItem("eventify_read_updates") || "{}");
+      // On ne peut pas compter précisément sans charger les events ici
+      // On se contente d'indiquer s'il y a des évenements dans le store non marqués lus
+      const unreadKeys = Object.keys(read);
+      return 0; // Le badge précis est calculé dans Updates.jsx
+    } catch {
+      return 0;
+    }
+  }, [user, location.pathname]);
 
   useEffect(() => {
     if (location.pathname === "/events") {
@@ -46,16 +60,19 @@ function NavbarPublic() {
               Trouver des événements
             </NavLink>
 
-            {/* Nouveau lien Mises à jour */}
+            {/* Lien Mises à jour avec badge */}
             <NavLink
               to="/updates"
               className={({ isActive }) =>
                 isActive
-                  ? "border-b-2 border-primary pb-1 text-primary"
-                  : "hover:text-primary"
+                  ? "border-b-2 border-primary pb-1 text-primary relative"
+                  : "hover:text-primary relative"
               }
             >
-              Mises à jour
+              <span className="flex items-center gap-1">
+                Mises à jour
+                <Bell size={14} className="opacity-60" />
+              </span>
             </NavLink>
 
             <NavLink

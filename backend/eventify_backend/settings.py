@@ -225,6 +225,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ==========================
+# FRONTEND URL
+# ==========================
+# Utilisé pour générer les liens dans les e-mails (invitations, etc.)
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
 
 
 # ==========================

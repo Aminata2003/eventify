@@ -24,10 +24,11 @@ function TicketCard({ event, onCancel, onConfirmWaitlist, isUpcoming }) {
   const { user } = useAuth();
   const Icon = categoryIcons[event.category];
   const ticketData = useMemo(() => {
+    // Utiliser une vraie URL web pour que le QR code soit scannable par n'importe quel appareil
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://eventify.app";
     const userId = user?.id ?? "guest";
-    const payload = `eventify://ticket?event=${event.id}&user=${userId}&date=${event.date}`;
-    return payload;
-  }, [event.id, event.date, user?.id]);
+    return `${origin}/event/${event.id}?ticket=${userId}`;
+  }, [event.id, user?.id]);
 
   return (
     <div className="flex bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100">

@@ -1,0 +1,346 @@
+# Analyse complète — Eventify
+
+> Rapport généré le 14 juillet 2026 — après `git pull origin main`
+
+---
+
+## 1. Vue d'ensemble
+
+**Eventify** est une plateforme full-stack de gestion d'événements destinée au marché ouest-africain (FCFA, fuseau Africa/Dakar). Elle cible deux profils d'utilisateurs : **organisateurs** et **participants**.
+
+| Couche | Technologie |
+|--------|-------------|
+| Backend | Django 4 + Django REST Framework + SimpleJWT |
+| Frontend | React 18 + Vite + React Router v6 |
+| Base de données | SQLite (dev) / PostgreSQL via `DATABASE_URL` (prod Render) |
+| Stockage médias | Cloudinary (si clés configurées), sinon FileSystem local |
+| Auth | JWT (access 1 jour, refresh 7 jours) |
+| Déploiement frontend | Vercel (`vercel.json` présent) |
+| Déploiement backend | Render (`build.sh` présent) |
+| Notifications | E-mail (SMTP ou console) |
+
+---
+
+## 2. Architecture Backend
+
+### 2.1 Structure des dossiers
+
+```
+backend/
+├── eventify_backend/      # Config Django (settings, urls, wsgi, asgi)
+├── events/                # Application principale
+│   ├── models.py          # 4 modèles : User, Event, Registration, Payment, Review
+│   ├── views.py           # 8 ViewSets/APIViews (683 lignes)
+│   ├── serializers.py     # 7 serializers (364 lignes)
+│   ├── notifications.py   # Module d'e-mails transactionnels (215 lignes)
+│   ├── filters.py         # Filtres django-filters pour EventViewSet
+│   ├── urls.py            # Routage API (27 lignes)
+│   └── tests.py           # Suite de tests de sécurité (248 lignes)
+├── requirements.txt
+└── manage.py
+```
+
+### 2.2 Modèles de données
+
+```mermaid
+erDiagram
+    User {
+        int id PK
+        string email UK
+        string role "participant | organizer"
+        string phone
+        string organization_name
+    }
+    Event {
+        int id PK
+        string title
+        string category
+        date date
+        time time
+        string location
+        string venue
+        url image
+        bool is_public
+        json allowed_users
+        int places
+        decimal price
+        string price_currency
+        int views_count
+        int registrations_count
+        string status "published|draft|cancelled"
+        FK organizer
+    }
+    Registration {
+        int id PK
+        string status "confirmed|pending|waitlist"
+        bool reminder_sent
+        datetime registered_at
+        FK event
+        FK participant
+    }
+    Payment {
+        int id PK
+        decimal amount
+        string currency
+        string provider "card|mobile_money"
+        string reference UK
+        string session_id UK
+        string status "pending|completed|failed"
+        json metadata
+        FK event
+        FK participant
+    }
+    Review {
+        int id PK
+        int rating "1-5"
+        text comment
+        FK event
+        FK participant
+    }
+
+    User ||--o{ Event : "organizes"
+    User ||--o{ Registration : "has"
+    User ||--o{ Payment : "makes"
+    User ||--o{ Review : "writes"
+    Event ||--o{ Registration : "receives"
+    Event ||--o{ Payment : "has"
+    Event ||--o{ Review : "receives"
+```
+
+### 2.3 Endpoints API
+
+| Méthode | Endpoint | Rôle |
+|---------|----------|------|
+| POST | `/api/auth/login/` | Connexion JWT |
+| POST | `/api/auth/token/refresh/` | Renouvellement token |
+| POST | `/api/auth/register/` | Inscription participant |
+| POST | `/api/auth/register/organizer/` | Inscription organisateur |
+| GET/POST | `/api/events/` | Liste / création d'événements |
+| GET/PATCH/DELETE | `/api/events/<id>/` | Détail / modification / suppression |
+| GET | `/api/events/my-events/` | Mes événements (org + participant) |
+| POST | `/api/events/<id>/register/` | Inscription à un événement |
+| DELETE | `/api/events/<id>/cancel/` | Annulation d'inscription |
+| GET | `/api/events/<id>/participants/` | Liste participants (org seulement) |
+| GET/POST | `/api/events/<id>/reviews/` | Avis sur un événement |
+| POST | `/api/payments/initiate/` | Initier un paiement |
+| POST | `/api/payments/confirm/` | Confirmer un paiement |
+| GET | `/api/dashboard/stats/` | Stats organisateur |
+| GET | `/api/users/search/?q=` | Recherche utilisateurs (invitations privées) |
+| GET | `/api/users/me/` | Profil courant |
+
+### 2.4 Logique métier clé
+
+- **Gestion de capacité** : contrôle `confirmed + pending` pour déterminer si l'événement est plein (bug #2 corrigé)
+- **Liste d'attente FIFO** : seul le premier en liste peut confirmer (bug #9 corrigé)
+- **Paiement simulé** : `pending` → réservation du spot → `confirm` → inscription `confirmed`
+- **Expiration des paiements** : sessions expirées après 15 min, nettoyées automatiquement
+- **Événements privés** : filtre par `allowed_users` (liste d'e-mails JSON)
+- **Notifications e-mail** : inscription, annulation, modification, rappels, liste d'attente
+
+### 2.5 Sécurité
+
+- **Permissions** : `IsOrganizerOrReadOnly`, `IsOrganizer`, `IsAuthenticated`
+- **CORS** : origines Vercel autorisées via regex + origines locales
+- **JWT** : intercepteur Axios pour refresh automatique
+- **Tests de sécurité** : 12 cas couverts dans `tests.py`
+
+---
+
+## 3. Architecture Frontend
+
+### 3.1 Structure des dossiers
+
+```
+frontend/src/
+├── App.jsx                # Routeur principal (102 lignes)
+├── main.jsx               # Point d'entrée React
+├── context/
+│   └── AuthContext.jsx    # État global d'auth (JWT restore + login/logout)
+├── services/
+│   ├── api.js             # Instance Axios + refresh intercepteur
+│   ├── authService.js     # login(), logout(), getCurrentUser()
+│   └── eventService.js    # 20+ fonctions (CRUD + paiement + CSV)
+├── components/
+│   ├── Navbar.jsx         # Navigation participant
+│   ├── NavbarOrganizer.jsx# Navigation organisateur
+│   ├── ProtectedRoute.jsx # Garde route → /login si non authentifié
+│   ├── OrganizerRoute.jsx # Garde route → /login si pas organisateur
+│   ├── EventCard.jsx      # Carte d'événement
+│   ├── StatCard.jsx       # Carte statistique dashboard
+│   ├── TicketCard.jsx     # Ticket d'inscription
+│   ├── Toast.jsx          # Système de notifications toast (Context)
+│   ├── FilterSidebar.jsx  # Filtres latéraux
+│   ├── CategoryPills.jsx  # Filtres catégories
+│   └── Footer.jsx
+└── pages/
+    ├── Home.jsx           # Page d'accueil
+    ├── Events.jsx         # Liste des événements publics
+    ├── EventDetails.jsx   # Détail d'un événement
+    ├── EventRegister.jsx  # Inscription + paiement (flux complet)
+    ├── Login.jsx          # Connexion
+    ├── RegisterParticipant.jsx
+    ├── RegisterOrganisateur.jsx
+    ├── MyEvents.jsx       # Mes événements (participant)
+    ├── Dashboard.jsx      # Tableau de bord organisateur
+    ├── CreateEvent.jsx    # Création / édition d'événement
+    ├── SuiviEvent.jsx     # Suivi participants d'un événement
+    └── Updates.jsx        # Fil d'actualités / mises à jour
+```
+
+### 3.2 Flux d'authentification
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant AuthContext
+    participant api.js
+    participant Backend
+
+    App->>AuthContext: mount → restoreUser()
+    AuthContext->>api.js: getAccessToken()
+    api.js-->>AuthContext: token (ou null)
+    AuthContext->>Backend: GET /users/me/
+    Backend-->>AuthContext: user data
+    Note over AuthContext: Si 401 → essai refresh token
+    AuthContext->>Backend: POST /auth/token/refresh/
+    Backend-->>AuthContext: new access token
+    AuthContext->>Backend: GET /users/me/ (retry)
+```
+
+### 3.3 Routing
+
+| Route | Accès | Page |
+|-------|-------|------|
+| `/` | Public | Home |
+| `/events` | Public | Liste événements |
+| `/event/:id` | Public | Détail événement |
+| `/login` | Public | Login |
+| `/register` | Public | RegisterParticipant |
+| `/register-organisateur` | Public | RegisterOrganisateur |
+| `/my-events` | `ProtectedRoute` | MyEvents |
+| `/event/:id/register` | `ProtectedRoute` | EventRegister |
+| `/updates` | Public | Updates |
+| `/create-event` | `OrganizerRoute` | CreateEvent |
+| `/dashboard` | `OrganizerRoute` | Dashboard |
+| `/dashboard/:eventId/participants` | `OrganizerRoute` | SuiviEvent |
+
+---
+
+## 4. Flux de paiement (simulation)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+
+    User->>Frontend: Clique "S'inscrire" (événement payant)
+    Frontend->>Backend: POST /payments/initiate/ {eventId, provider, phone?}
+    Backend->>Backend: Crée Registration(status=pending)
+    Backend->>Backend: Crée Payment(status=pending)
+    Backend-->>Frontend: {sessionId, instructions, expiresIn: 900}
+    Frontend->>User: Affiche instructions de paiement
+    User->>Frontend: Clique "Simuler paiement"
+    Frontend->>Backend: POST /payments/confirm/ {sessionId}
+    Backend->>Backend: Payment(status=completed)
+    Backend->>Backend: Registration(status=confirmed)
+    Backend->>Backend: Envoie e-mail confirmation
+    Backend-->>Frontend: {success: true, registration}
+    Frontend->>User: Affiche ticket de confirmation
+```
+
+---
+
+## 5. Module de notifications e-mail
+
+| Fonction | Déclencheur |
+|----------|-------------|
+| `send_registration_notifications` | Inscription confirmée |
+| `send_event_reminder_notification` | J-1 avant l'événement (à planifier) |
+| `send_event_organizer_reminder` | J-1 pour l'organisateur |
+| `send_cancellation_notification_to_organizer` | Annulation par participant |
+| `send_participant_cancellation_confirmation` | Confirmation d'annulation au participant |
+| `send_event_cancelled_notification` | Événement annulé par organisateur |
+| `send_event_modified_notification` | Modification date/lieu/heure |
+| `send_waitlist_notification` | Ajout en liste d'attente |
+| `send_waitlist_available_notification` | Place libérée, inviter à confirmer |
+
+> [!NOTE]
+> Les rappels J-1 (`send_event_reminder_notification`, `send_event_organizer_reminder`) sont implémentés mais **ne sont pas déclenchés automatiquement** : il n'y a pas de tâche Celery/Cron dans le projet. Il faudrait un job planifié (ex. `django-apscheduler`, Celery Beat ou Render Cron).
+
+---
+
+## 6. Dépendances
+
+### Backend (`requirements.txt`)
+- `django`, `djangorestframework`
+- `djangorestframework-simplejwt` — JWT
+- `django-cors-headers` — CORS
+- `django-filter` — Filtres QuerySet
+- `dj-database-url` — URL PostgreSQL Render
+- `cloudinary`, `django-cloudinary-storage` — Médias prod
+- `whitenoise` — Servir les statics
+- `drf-yasg` — Documentation Swagger (installé, mais route non visible)
+- `psycopg2-binary` — PostgreSQL
+- `python-dotenv` — Variables d'env
+
+### Frontend (`package.json`)
+- `react`, `react-dom`, `react-router-dom`
+- `axios` — HTTP client
+- `lucide-react` — Icônes
+- `vite` — Build tool
+- Tailwind CSS (présent dans config mais usage mixte avec classes utilitaires inline)
+
+---
+
+## 7. Points forts ✅
+
+1. **Architecture claire** : séparation nette Backend/Frontend, service layer bien défini (`eventService.js`)
+2. **Sécurité robuste** : permissions granulaires, tests de sécurité, refresh JWT automatique
+3. **Gestion avancée des places** : FIFO waitlist, expiration pending, notifications chain
+4. **Dual-mode API/Mock** : `USE_API` flag dans `eventService.js` pour développement sans backend
+5. **Internationalisation** : langue française, fuseau Africa/Dakar, FCFA
+6. **Déploiement prêt** : configurations Vercel + Render, SQLite/PostgreSQL switchable
+7. **Tests unitaires** : 12 cas couverts en sécurité et business logic
+
+---
+
+## 8. Points d'amélioration / risques ⚠️
+
+| # | Problème | Sévérité | Recommandation |
+|---|---------|----------|----------------|
+| 1 | **Rappels e-mail non automatiques** | Moyenne | Ajouter un cron job (Render Cron ou Celery Beat) |
+| 2 | **Polling dashboard (10s)** | Faible | Remplacer par React Query ou SWR avec `staleTime` |
+| 3 | **`confirm()` natif du navigateur** dans Dashboard | UX | Remplacer par une modale de confirmation personnalisée |
+| 4 | **Pas de pagination** sur `/api/events/` | Performance | Ajouter `PageNumberPagination` côté API |
+| 5 | **`allowed_users` stocké en JSON** | Scalabilité | Envisager une table `EventInvitation` pour les gros événements |
+| 6 | **Paiement simulé** uniquement | Fonctionnel | Intégrer une vraie passerelle (Wave, Orange Money API) |
+| 7 | **Swagger installé** (`drf-yasg`) mais pas exposé via URL | Documentation | Ajouter route `/api/docs/` |
+| 8 | **`views_count` non incrémenté** dans les vues | Analytique | Ajouter `Event.objects.filter(pk=pk).update(views_count=F('views_count')+1)` dans `retrieve()` |
+| 9 | **Pas de refresh des données en temps réel** côté participant | UX | Utiliser SWR ou React Query |
+| 10 | **`db.sqlite3` committé** dans le repo | Sécurité | Ajouter au `.gitignore` global |
+
+---
+
+## 9. Flux utilisateur global
+
+```mermaid
+graph TD
+    A[Visiteur] --> B[Page d'accueil]
+    B --> C[Parcourir événements]
+    C --> D{Connecté ?}
+    D -- Non --> E[Login / Register]
+    E --> D
+    D -- Oui Participant --> F[Voir détails événement]
+    F --> G{Payant ?}
+    G -- Non --> H[S'inscrire gratuitement]
+    G -- Oui --> I[Flux paiement simulé]
+    H --> J[Email confirmation]
+    I --> J
+    J --> K[Mes événements]
+    D -- Oui Organisateur --> L[Dashboard]
+    L --> M[Créer événement]
+    L --> N[Gérer participants]
+    L --> O[Modifier/Supprimer événement]
+    O --> P[Email modification aux inscrits]
+```
